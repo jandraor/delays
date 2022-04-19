@@ -18,7 +18,7 @@ functions {
     C_in = params[2]*E1_to_I1;
     I2_to_I3 = 4*y[6];
     I3_to_I4 = 4*y[7];
-    I6_to_I7 = 4*y[9];
+    I6_to_I7 = 4*y[10];
     I4_to_I5 = 4*y[8];
     I5_to_I6 = 4*y[9];
     I7_to_I8 = 4*y[11];
