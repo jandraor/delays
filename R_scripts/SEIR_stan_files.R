@@ -118,8 +118,9 @@ get_stan_params <- function(meas_model) {
     
     sp <- paste(
       "parameters {",
-      "  real<lower = 0> beta;",
-      "  real<lower = 0> I0;",
+      "  real<lower = 0>            beta;",
+      "  real<lower = 0>            I0;",
+      "  real<lower = 0, upper = 1> rho;",
       "}", sep = "\n")
   }
   

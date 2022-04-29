@@ -1,0 +1,112 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+
+library(cmdstanr)
+library(dplyr)
+library(purrr)
+library(readr)
+library(readsdr)
+library(rstan)
+library(stringr)
+library(tictoc)
+library(tidyr)
+
+source("./R_scripts/Inference.R")
+source("./R_scripts/model_selection.R")
+source("./R_scripts/plots.R")
+source("./R_scripts/posterior_utils.R")
+source("./R_scripts/SEIR_stan_files.R")
+source("./R_scripts/synthetic_data.R")
+source("./R_scripts/tables.R")
+source("./R_scripts/utils.R")
+```
+
+# Synthetic data
+
+```{r params1}
+N_val         <- 1e3 # Population size
+inv_sigma_val <- 2
+inv_gamma_val <- 2 # infectious period
+beta_val      <- 1
+R0_val        <- beta_val * inv_gamma_val
+rho_val       <- 0.75
+```
+
+## Case 1
+
+```{r}
+m_val   <- 1
+n_val   <- 5
+ts_val  <- 60
+phi_val <- 0 # Poisson
+
+seeds     <- c(4626, 7662, 1065, 1645, 1040, 6421, 7197, 1692, 1986, 1369, 4913,
+               9034, 7943, 377, 7224, 3645, 2779, 7450, 1616, 472)
+
+y_list <- imap(seeds, function(seed, i) {
+  
+  SEIR_measured_incidence(seed, m_val, n_val, N_val, beta_val, inv_sigma_val, 
+                          inv_gamma_val, rho_val, ts_val,phi_val) |> 
+    mutate(dataset = i)
+})
+```
+
+```{r}
+syn_data_file <- "./data/Synthetic/SEIR/Case_1.csv"
+
+if(!file.exists(syn_data_file)) {
+  write_csv(do.call(rbind, y_list), syn_data_file)
+}
+```
+
+## Case 2
+
+```{r}
+m_val   <- 1
+n_val   <- 5
+ts_val  <- 60
+phi_val <- 1/3
+
+seeds     <- c(297, 8000, 2352, 2872, 4039, 1211, 7876, 1206, 9917, 3072, 1170,
+               2426, 1622, 5136, 8298, 3276, 110, 5623, 9587, 8013)
+
+y_list <- imap(seeds, function(seed, i) {
+  
+  SEIR_measured_incidence(seed, m_val, n_val, N_val, beta_val, inv_sigma_val, 
+                          inv_gamma_val, rho_val, ts_val,phi_val) |> 
+    mutate(dataset = i)
+})
+```
+
+```{r}
+syn_data_file <- "./data/Synthetic/SEIR/Case_2.csv"
+
+if(!file.exists(syn_data_file)) {
+  write_csv(do.call(rbind, y_list), syn_data_file)
+}
+```
+
+# Stan files
+
+## Poisson
+
+
+```{r}
+M_m <- 1
+M_n <- 9
+
+info_files <- create_SEIR_files(M_m, M_n, inv_sigma_val, inv_gamma_val, N_val, 
+                                "pois")
+```
+
+
+## Negative binomial
+
+```{r}
+M_m <- 1
+M_n <- 9
+
+info_files <- create_SEIR_files(M_m, M_n, inv_sigma_val, inv_gamma_val, N_val, 
+                                "nbin")
+```
+
