@@ -65,7 +65,7 @@
 				<inflow>C_in</inflow>
 			</stock>
 			<flow name="C in">
-				<eqn>rho * S_to_E</eqn>
+				<eqn>rho * E1_to_I1</eqn>
 			</flow>
 			<aux name="rho">
 				<eqn>1</eqn>
@@ -116,7 +116,7 @@
 				<isee:iframe color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt" border_width="thin" border_style="solid"/>
 				<isee:financial_table color="black" background="#E0E0E0" text_align="right" font_size="12pt" auto_fit="true" first_column_width="250" other_column_width="100" header_font_style="normal" header_font_weight="bold" header_text_decoration="none" header_text_align="center" header_vertical_text_align="center" header_font_color="black" header_font_family="Arial" header_font_size="14pt" header_text_padding="2" header_text_border_color="black" header_text_border_width="thin" header_text_border_style="none"/>
 			</style>
-			<view isee:show_pages="false" background="white" page_width="822" page_height="575" isee:popup_graphs_are_comparative="true" isee:enable_non_negative_highlights="false" type="stock_flow">
+			<view isee:show_pages="false" background="white" page_width="808" page_height="561" isee:popup_graphs_are_comparative="true" isee:enable_non_negative_highlights="false" type="stock_flow">
 				<style color="black" background="white" font_style="normal" font_weight="normal" text_decoration="none" text_align="center" vertical_text_align="center" font_color="black" font_family="Arial" font_size="10pt" padding="2" border_color="black" border_width="thin" border_style="none">
 					<stock color="blue" background="white" font_color="blue" font_size="9pt" label_side="top">
 						<shape type="rectangle" width="45" height="35"/>
@@ -176,9 +176,9 @@
 				</flow>
 				<stock label_side="center" x="615" y="183" name="R"/>
 				<aux label_side="top" x="168" y="77" name="par beta"/>
-				<aux x="390" y="248" name="par sigma"/>
+				<aux x="329" y="241" name="par sigma"/>
 				<aux x="539" y="248" name="par gamma"/>
-				<connector uid="1" angle="88.2643">
+				<connector uid="1" angle="43.5559">
 					<from>par_sigma</from>
 					<to>E1_to_I1</to>
 				</connector>
@@ -211,20 +211,20 @@
 					<from>par_beta</from>
 					<to>S_to_E</to>
 				</connector>
-				<stock label_side="center" x="373" y="335" name="C"/>
-				<flow label_side="bottom" x="282.75" y="332" name="C in">
+				<stock label_side="center" x="549" y="350" name="C"/>
+				<flow label_side="bottom" x="458.75" y="347" name="C in">
 					<pts>
-						<pt x="203" y="332"/>
-						<pt x="350.5" y="332"/>
+						<pt x="379" y="347"/>
+						<pt x="526.5" y="347"/>
 					</pts>
 				</flow>
-				<connector uid="9" angle="278.297">
-					<from>S_to_E</from>
+				<aux x="412" y="376.5" name="rho"/>
+				<connector uid="9" angle="32.2526">
+					<from>rho</from>
 					<to>C_in</to>
 				</connector>
-				<aux x="236" y="361.5" name="rho"/>
-				<connector uid="10" angle="32.2526">
-					<from>rho</from>
+				<connector uid="10" angle="285.422">
+					<from>E1_to_I1</from>
 					<to>C_in</to>
 				</connector>
 			</view>

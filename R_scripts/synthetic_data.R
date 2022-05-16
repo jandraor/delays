@@ -58,15 +58,12 @@ SEIR_actual_incidence <- function(m, n, N, beta_val,inv_sigma, inv_gamma, rho, t
 }
 
 
-SEIR_measured_incidence <- function(seed, m, n, N, beta_val, inv_sigma, 
+SEIR_measured_incidence <- function(m, n, N, beta_val, inv_sigma, 
                                     inv_gamma, rho, tf, phi_val) {
   
   actual_incidence <- SEIR_actual_incidence(m, n, N, beta_val, inv_sigma, 
                                             inv_gamma, rho, tf)
   
-  set.seed(seed)
-  
   actual_incidence |> 
       mutate(y = rnbinom(n(), mu = x, size = 1 / phi_val))
-
 }

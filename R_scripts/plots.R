@@ -1,5 +1,6 @@
 library(ggplot2)
 library(ggpubr)
+library(viridis)
 
 plot_ts_by_I_order <- function(y_df) {
   
@@ -120,5 +121,39 @@ plot_log_lik_by_order <- function(posterior_df) {
                alpha = 0.5, colour = "grey50", linetype = "dotted") +
     scale_x_continuous(breaks = 1:9) +
     labs(y = "Log-likelihood") +
+    theme_pubr()
+}
+
+plot_error_by_L <- function(df) {
+  
+  ggplot(L_df, aes(x = L_min, y = L_max)) +
+    geom_tile(aes(fill = sqrt(error))) +
+    scale_fill_viridis(discrete = FALSE) +
+    theme_pubr()
+}
+
+plot_min_error <- function(df, tol = 0) {
+  
+  df_min <- df |> filter(error <= min(error) + tol) |> 
+    mutate(id = row_number())
+  
+  ggplot(df_min) +
+    geom_errorbar(aes(x = id, ymin = L_min, ymax = L_max), colour = "steelblue") +
+    scale_y_continuous(limits = c(0,50)) +
+    coord_flip() +
+    labs(y = "Time range", x= "") +
+    theme_pubr()
+}
+
+plot_incidence <- function(y_list, dist) {
+  
+  y_all <- do.call(rbind, y_list)
+  
+  ggplot(y_all, aes(time, y)) +
+    geom_line(aes(group = dataset), colour = "grey80", alpha = 0.10) +
+    facet_wrap("I_order") +
+    labs(x        = "Days", 
+         y        = "Incidence [Cases/day]",
+         subtitle = dist) +
     theme_pubr()
 }

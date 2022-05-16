@@ -99,7 +99,7 @@ create_SEIR_files <- function(m, n, inv_sigma, inv_gamma, N, meas_model) {
     
     dist  <- str_to_title(meas_model)    
     
-    stan_fldr     <- str_glue("./Stan_files/SEIR/3_unknowns/{dist}")
+    stan_fldr     <- str_glue("./Stan_files/SEIR/{dist}")
     dir.create(stan_fldr, showWarnings = FALSE, recursive = TRUE)  
     stan_filepath <- file.path(stan_fldr, str_glue("SE{E_ord}I{I_ord}R.stan"))
     
