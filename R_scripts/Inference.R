@@ -6,12 +6,23 @@ fit_SEIR <- function(info_files, D_m, D_n, ds, epi_df, root_fldr, n_chains,
     M_m           <- info$E_ord
     M_n           <- info$I_ord
     n_stocks      <- info$n_stocks
-    stan_filepath <- info$stan_filepath
-    
     backup_folder <- str_glue("{root_fldr}/D{D_m}{D_n}/dataset_{ds}/M{M_m}{M_n}")
     fn            <- file.path(backup_folder, "fit.rds") 
     
     if(!file.exists(fn)) {
+      
+      stan_filepath   <- info$stan_filepath
+      folder_id       <- paste0(sample(c(0:9, LETTERS), 8, T), collapse = '')
+      stan_fldr       <- stan_filepath |> dirname()
+      stan_file_name  <- stan_filepath |> basename()
+      new_folder_path <- file.path(stan_fldr, folder_id)
+      dir.create(new_folder_path, recursive = TRUE)
+      
+      new_file_path   <- file.path(new_folder_path, stan_file_name)
+      
+      file.copy(stan_filepath, new_file_path)
+      
+      stan_filepath <- new_file_path
       
       N <- nrow(epi_df)
       
@@ -55,6 +66,8 @@ fit_SEIR <- function(info_files, D_m, D_n, ds, epi_df, root_fldr, n_chains,
       diag_path <- file.path(backup_folder, str_glue("diag.txt"))
       diagnosis <- fit$cmdstan_diagnose()
       writeLines(diagnosis$stdout, diag_path)
+      
+      unlink(new_folder_path, recursive = TRUE)
       
       sf           <- rstan::read_stan_csv(fit$output_files())
       posterior_df <- as.data.frame(sf)

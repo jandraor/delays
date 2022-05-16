@@ -1,6 +1,6 @@
 library(gt)
 
-table_success <- function(df) {
+table_success <- function(df, n_data) {
   
   df$D_n <- as.factor(df$D_n)
   
@@ -9,7 +9,7 @@ table_success <- function(df) {
   
   success_df <- df |> filter(error == 0) |> 
     count(D_n, name = "n_successes", .drop = FALSE) |> 
-    mutate(pct_success = n_successes / 20)
+    mutate(pct_success = n_successes / n_data)
   
   summary_df <- full_join(success_df, error_df, by = "D_n")
   
