@@ -24,32 +24,37 @@ source("./R_scripts/utils.R")
 # Synthetic data
 
 ```{r params1}
-N_val         <- 1e3 # Population size
+N_val         <- 5e3 # Population size
 inv_sigma_val <- 2
 inv_gamma_val <- 2 # infectious period
 beta_val      <- 1
 R0_val        <- beta_val * inv_gamma_val
 rho_val       <- 0.75
+n_ds          <- 20
+
+m_val   <- 1
+n_val   <- 5
+ts_val  <- 70
 ```
 
 ## Case 1
 
 ```{r}
-m_val   <- 1
-n_val   <- 5
-ts_val  <- 60
 phi_val <- 0 # Poisson
+set.seed(1642)
 
-seeds     <- c(4626, 7662, 1065, 1645, 1040, 6421, 7197, 1692, 1986, 1369, 4913,
-               9034, 7943, 377, 7224, 3645, 2779, 7450, 1616, 472)
-
-y_list <- imap(seeds, function(seed, i) {
+y_list <- lapply(1:n_ds, function(i) {
   
-  SEIR_measured_incidence(seed, m_val, n_val, N_val, beta_val, inv_sigma_val, 
+  SEIR_measured_incidence(m_val, n_val, N_val, beta_val, inv_sigma_val, 
                           inv_gamma_val, rho_val, ts_val,phi_val) |> 
     mutate(dataset = i)
 })
 ```
+
+```{r}
+plot_incidence(y_list, "Poisson")
+```
+
 
 ```{r}
 syn_data_file <- "./data/Synthetic/SEIR/Case_1.csv"
@@ -62,20 +67,19 @@ if(!file.exists(syn_data_file)) {
 ## Case 2
 
 ```{r}
-m_val   <- 1
-n_val   <- 5
-ts_val  <- 60
 phi_val <- 1/3
+set.seed(4192)
 
-seeds     <- c(297, 8000, 2352, 2872, 4039, 1211, 7876, 1206, 9917, 3072, 1170,
-               2426, 1622, 5136, 8298, 3276, 110, 5623, 9587, 8013)
-
-y_list <- imap(seeds, function(seed, i) {
+y_list <- lapply(1:n_ds, function(i) {
   
-  SEIR_measured_incidence(seed, m_val, n_val, N_val, beta_val, inv_sigma_val, 
+  SEIR_measured_incidence(m_val, n_val, N_val, beta_val, inv_sigma_val, 
                           inv_gamma_val, rho_val, ts_val,phi_val) |> 
     mutate(dataset = i)
 })
+```
+
+```{r}
+plot_incidence(y_list, "Negative Binomial")
 ```
 
 ```{r}
@@ -97,6 +101,8 @@ M_n <- 9
 
 info_files <- create_SEIR_files(M_m, M_n, inv_sigma_val, inv_gamma_val, N_val, 
                                 "pois")
+
+saveRDS(info_files, "./Stan_files/SEIR/Pois/meta_info.rds")
 ```
 
 
@@ -108,5 +114,7 @@ M_n <- 9
 
 info_files <- create_SEIR_files(M_m, M_n, inv_sigma_val, inv_gamma_val, N_val, 
                                 "nbin")
+
+saveRDS(info_files, "./Stan_files/SEIR/Nbin/meta_info.rds")
 ```
 
