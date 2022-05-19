@@ -5,7 +5,7 @@ functions {
     real E1_to_I1;
     real I_to_R;
     real C_in;
-    S_to_E = params[1]*y[1]*y[3]/5000;
+    S_to_E = params[1]*y[1]*y[3]/10000;
     E1_to_I1 = 0.5*y[2];
     I_to_R = 0.5*y[3];
     C_in = params[2]*E1_to_I1;
@@ -39,7 +39,7 @@ transformed parameters{
   array[n_params] real params;
   real phi_inv;
   phi_inv = 1 / phi;
-  x0[1] = 5000 - 1 * I0;
+  x0[1] = 10000 - 1 * I0;
   x0[2] = 0;
   x0[3] = I0;
   x0[4] = 0;

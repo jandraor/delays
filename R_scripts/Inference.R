@@ -37,15 +37,13 @@ fit_SEIR <- function(info_files, D_m, D_n, ds, epi_df, root_fldr, n_chains,
       
       tic.clearlog()
       tic()
-      
 
       fit <- mod$sample(data            = stan_d,
                         chains          = n_chains,
                         parallel_chains = 4,
                         iter_warmup     = samples_per_chain,
                         iter_sampling   = samples_per_chain,
-                        adapt_delta     = 0.9,
-                        refresh         = 5,
+                        refresh         = 100,
                         save_warmup     = FALSE)
       
       toc(quiet = FALSE, log = TRUE)
@@ -82,6 +80,27 @@ fit_SEIR <- function(info_files, D_m, D_n, ds, epi_df, root_fldr, n_chains,
     }
     
     subset_df 
+  })
+}
+
+fit_datasets <- function(D_m, D_n, n_data, y_df, info_files, root_fldr,
+                         n_chains, samples_per_chain) {
+  
+  lapply(1:n_data, function(ds) {
+
+    flu_data <- y_df |> filter(E_order == D_m,
+                               I_order == D_n,
+                               dataset == ds)
+    
+    lt       <- find_last_time(flu_data)
+    
+    flu_data <- flu_data |> filter(time < (lt + 1))
+    
+    fit_list <- fit_SEIR(info_files, D_m, D_n, ds, flu_data, root_fldr, 
+                         n_chains, samples_per_chain)
+    
+    format_posterior(fit_list, info_files, D_m, D_n, ds)
+    
   })
 }
 

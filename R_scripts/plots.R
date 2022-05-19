@@ -18,7 +18,7 @@ plot_ts_by_I_order <- function(y_df) {
     mutate(id = paste(I_order, group, highlight, sep = "_"))
   
   
-  ggplot(df, aes(x = time, y =  y)) +
+  ggplot(df, aes(x = time, y =  x)) +
     geom_line(aes(colour = highlight, group = id, alpha = highlight)) +
     scale_colour_manual(values = c("grey90", "steelblue")) +
     scale_alpha_manual(values = c(0.5, 1)) +
@@ -49,21 +49,6 @@ plot_hist_errors <- function(df) {
   
 }
 
-plot_freq_order <- function(df) {
-  
-  count_df <- df |> group_by(D_n, M_n) |> 
-    summarise(count = n())
-  
-  brks <- 1:9
-  
-  ggplot(count_df, aes(x = D_n, y = M_n)) +
-    geom_point(aes(size = count), colour = "steelblue") +
-    scale_y_continuous(breaks = brks, limits = c(1,9)) +
-    labs(x = "Data order", y = "Model order") +
-    theme_pubr() +
-    theme(legend.position = "none")
-}
-
 plot_nbin_pars <- function(df, inv_gamma_val, beta_val, phi_val, rho_val) {
   
   R0_val <- beta_val * inv_gamma_val
@@ -88,40 +73,6 @@ plot_nbin_pars <- function(df, inv_gamma_val, beta_val, phi_val, rho_val) {
     labs(x = "Model order", y = "Value") +
     theme_pubr() +
     theme(legend.position = "none")
-}
-
-plot_log_lik_by_order <- function(posterior_df) {
-  
-  posterior_df <- posterior_df |> 
-    mutate(data_order = D_n,
-              model_order = M_n)
-  
-  MLE_df <- posterior_df |> 
-    select(data_order, model_order, dataset, log_lik) |> 
-    group_by(model_order, dataset,) |> 
-    filter(log_lik == max(log_lik)) |> unique() |> ungroup()
-  
-  n_data <- c(1, 2, 5, 10, 15, 20)
-  
-  map_df(n_data, function(d) {
-    MLE_df |> filter(dataset <= d) |> 
-      group_by(model_order) |> 
-      summarise(ll = sum(log_lik)) |> 
-      mutate(d = d)
-  }) -> comparison_MLE
-  
-  comparison_MLE |> group_by(d) |> 
-    filter(ll == max(ll)) |> ungroup() -> MLE_per_d
-  
-  
-  ggplot(comparison_MLE, aes(x = model_order, y = ll)) +
-    geom_line() +
-    facet_wrap(~d, scales = "free") +
-    geom_vline(data = MLE_per_d, aes(xintercept = model_order),
-               alpha = 0.5, colour = "grey50", linetype = "dotted") +
-    scale_x_continuous(breaks = 1:9) +
-    labs(y = "Log-likelihood") +
-    theme_pubr()
 }
 
 plot_error_by_L <- function(df) {
@@ -155,5 +106,28 @@ plot_incidence <- function(y_list, dist) {
     labs(x        = "Days", 
          y        = "Incidence [Cases/day]",
          subtitle = dist) +
+    theme_pubr()
+}
+
+plot_x_prediction_facets <- function(x_summary, y_subset) {
+  
+  ggplot(x_summary, aes(time, q50)) +
+    geom_line(colour = "steelblue") +
+    geom_ribbon(alpha = 0.1, aes(ymin = q2.5, ymax = q97.5),
+                fill = "steelblue") +
+    geom_ribbon(alpha = 0.2, aes(ymin = q25, ymax = q75),
+                fill = "steelblue") +
+    geom_point(data = y_subset, aes(time, x), size = 0.5, colour = "grey50") +
+    facet_grid(M_n ~ dataset) +
+    theme_pubr()
+}
+
+plot_x_prediction <- function(x_summary, y_subset) {
+  
+  ggplot(x_summary |> mutate(M_n = as.factor(M_n)), 
+         aes(time, q50)) +
+    geom_line(aes(group = M_n, colour = M_n)) +
+    geom_point(data = y_subset, aes(time, x), size = 0.5, colour = "grey50") +
+    facet_wrap(~ dataset) +
     theme_pubr()
 }

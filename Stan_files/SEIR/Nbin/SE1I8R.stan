@@ -12,7 +12,7 @@ functions {
     real I5_to_I6;
     real I7_to_I8;
     real I8_to_R;
-    S_to_E = params[1]*y[1]*(y[3]+y[6]+y[7]+y[8]+y[9]+y[10]+y[11]+y[12])/5000;
+    S_to_E = params[1]*y[1]*(y[3]+y[6]+y[7]+y[8]+y[9]+y[10]+y[11]+y[12])/10000;
     E1_to_I1 = 0.5*y[2];
     I1_to_I2 = 4*y[3];
     C_in = params[2]*E1_to_I1;
@@ -60,7 +60,7 @@ transformed parameters{
   array[n_params] real params;
   real phi_inv;
   phi_inv = 1 / phi;
-  x0[1] = 5000 - 8 * I0;
+  x0[1] = 10000 - 8 * I0;
   x0[2] = 0;
   x0[3] = I0;
   x0[4] = 0;
