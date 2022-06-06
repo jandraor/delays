@@ -90,7 +90,7 @@ plot_min_error <- function(df, tol = 0) {
   
   ggplot(df_min) +
     geom_errorbar(aes(x = id, ymin = L_min, ymax = L_max), colour = "steelblue") +
-    scale_y_continuous(limits = c(0,50)) +
+    scale_y_continuous(limits = c(0, 60)) +
     coord_flip() +
     labs(y = "Time range", x= "") +
     theme_pubr()
@@ -129,5 +129,24 @@ plot_x_prediction <- function(x_summary, y_subset) {
     geom_line(aes(group = M_n, colour = M_n)) +
     geom_point(data = y_subset, aes(time, x), size = 0.5, colour = "grey50") +
     facet_wrap(~ dataset) +
+    theme_pubr()
+}
+
+plot_CV_boundaries <- function(y_df, boundaries_df) {
+  
+  demo_df <- y_df |> filter(dataset == 1) |> 
+    select(time, x, I_order) |> 
+    left_join(boundaries_df, by = "I_order") |> 
+    mutate(fill  = ifelse(time >= ll & time <= ul, TRUE, FALSE),
+           point = ifelse(time == ll | time == ul, TRUE, FALSE))
+  
+  point_df <- demo_df |> filter(point == TRUE)
+  
+  ggplot(demo_df, aes(time, x)) +
+    geom_area(aes(fill = fill), show.legend = FALSE) +
+    geom_line(colour = "steelblue", size = 0.1) +
+    geom_point(data = point_df, size = 0.1, colour = "orange") +
+    scale_fill_manual(values = c("white", "grey95")) +
+    facet_wrap("I_order", ncol = 1) +
     theme_pubr()
 }
