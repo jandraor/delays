@@ -1,5 +1,6 @@
 library(ggplot2)
 library(ggpubr)
+library(patchwork)
 library(viridis)
 
 plot_ts_by_I_order <- function(y_df) {
@@ -75,18 +76,34 @@ plot_nbin_pars <- function(df, inv_gamma_val, beta_val, phi_val, rho_val) {
     theme(legend.position = "none")
 }
 
-plot_error_by_L <- function(df) {
+plot_error_by_L <- function(df, error_var = "error") {
   
-  ggplot(L_df, aes(x = L_min, y = L_max)) +
-    geom_tile(aes(fill = sqrt(error))) +
+  if(error_var == "error") {
+    g <-   ggplot(df, aes(x = L_min, y = L_max)) +
+      geom_tile(aes(fill = sqrt(error)))
+  }
+  
+  if(error_var == "sqrt_error") {
+    g <-   ggplot(df, aes(x = L_min, y = L_max)) +
+      geom_tile(aes(fill = sqrt(sqrt_error)))
+  }
+  
+  g +
     scale_fill_viridis(discrete = FALSE) +
     theme_pubr()
 }
 
-plot_min_error <- function(df, tol = 0) {
+plot_min_error <- function(df, tol = 0, error_var = "error") {
   
-  df_min <- df |> filter(error <= min(error) + tol) |> 
-    mutate(id = row_number())
+  if(error_var == "error") {
+    df_min <- df |> filter(error <= min(error) + tol) |> 
+      mutate(id = row_number())
+  }
+  
+  if(error_var == "sqrt_error") {
+    df_min <- df |> filter(sqrt_error <= min(sqrt_error) + tol) |> 
+      mutate(id = row_number())
+  }
   
   ggplot(df_min) +
     geom_errorbar(aes(x = id, ymin = L_min, ymax = L_max), colour = "steelblue") +

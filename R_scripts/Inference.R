@@ -70,8 +70,8 @@ fit_SEIR <- function(info_files, D_m, D_n, ds, epi_df, root_fldr, n_chains,
       sf           <- rstan::read_stan_csv(fit$output_files())
       posterior_df <- as.data.frame(sf)
       
-      subset_df    <- select(posterior_df, beta, I0, rho, phi, log_lik, pred, 
-                             starts_with("x[")) 
+      subset_df    <- select(posterior_df, beta, I0, rho, log_lik, pred, 
+                             starts_with("x["), contains("phi")) 
         
       saveRDS(subset_df , fn)
       
