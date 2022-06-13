@@ -10,7 +10,7 @@
 #' @param tf Stop time
 SEIR_actual_incidence <- function(m, n, N, beta_val,inv_sigma, inv_gamma, rho, tf) {
   
-  orders <- cross2(1:m, 1:n) 
+  orders <- cross2(m, n) 
   
   map_df(orders, function(ord) {
     

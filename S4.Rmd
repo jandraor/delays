@@ -1,0 +1,429 @@
+---
+title: "Untitled"
+output: html_document
+date: '2022-06-10'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+library(cmdstanr)
+library(dplyr)
+library(purrr)
+library(readr)
+library(readsdr)
+library(rstan)
+library(stringr)
+library(tictoc)
+library(tidyr)
+
+source("./R_scripts/Inference.R")
+source("./R_scripts/model_selection.R")
+source("./R_scripts/plots.R")
+source("./R_scripts/posterior_utils.R")
+source("./R_scripts/SEIR_stan_files.R")
+source("./R_scripts/synthetic_data.R")
+source("./R_scripts/tables.R")
+source("./R_scripts/utils.R")
+```
+
+# Synthetic data
+
+```{r}
+inv_gamma_val <- 2
+y_df          <- read_csv("./data/Synthetic/SEIR/Case_3.csv")
+```
+
+## Latent states
+
+```{r}
+plot_ts_by_I_order(y_df)
+```
+
+## Measurements
+
+
+```{r}
+ggplot(y_df, aes(time, y)) +
+  geom_line(aes(group = dataset), colour = "grey75", alpha = 0.1) +
+  facet_wrap("I_order") +
+  theme_pubr()
+```
+
+# Inference
+
+```{r}
+root_fldr <- "./Saved_objects/Inference/Synthetic_data/SEIR/Case_3"
+
+n_chains          <- 4
+samples_per_chain <- 1000
+
+n_data    <- 20
+all_files <- readRDS("./Stan_files/SEIR/Pois/meta_info.rds")
+M_n       <- 1:4
+
+ll_list  <- vector(mode = "list", length = length(M_n))
+ll_list2 <- vector(mode = "list", length = length(M_n))
+```
+
+## First-order data
+
+```{r}
+D_m <- 3
+D_n <- 1
+```
+
+```{r}
+M_m        <- 3
+fltr       <- map_lgl(all_files, \(fl_list) fl_list$E_ord == M_m)
+info_files <- all_files[fltr]
+
+create_backup_fldrs(D_m, D_n, n_data, M_m, M_n, root_fldr)
+```
+
+```{r}
+ll_list[[D_n]] <- fit_datasets(D_m, D_n, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain)
+```
+
+```{r, wrong_E_1}
+M_m        <- 1
+
+fltr       <- map_lgl(all_files, \(fl_list) {
+  fl_list$E_ord == M_m & fl_list$I_ord %in% M_n
+  })
+
+info_files <- all_files[fltr]
+
+create_backup_fldrs(D_m, D_n, n_data, M_m, M_n, root_fldr)
+```
+
+```{r}
+ll_list2[[D_n]] <- fit_datasets(D_m, D_n, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain)
+```
+
+
+```{r}
+ds_subset <- c(1, 5, 10, 20)
+
+df1 <- do.call("bind_rows", ll_list[[D_n]][ds_subset])
+df2 <- do.call("bind_rows", ll_list2[[D_n]][ds_subset])
+
+comparison_df <- bind_rows(df1, df2) |> 
+  mutate(R0 = beta * inv_gamma_val)
+```
+
+```{r}
+plot_par_comparison(comparison_df, "R0", 1.25 * inv_gamma_val, D_m, D_n, "R[0]")
+```
+
+```{r}
+plot_par_comparison(comparison_df, "rho", 0.75, D_m, D_n, "rho")
+```
+
+```{r}
+plot_par_comparison(comparison_df, "I0", 1 * D_n, D_m, D_n, "I[0]")
+```
+
+```{r}
+x_summary <- make_x_summary(ll_list[[D_n]][ds_subset]) 
+y_subset  <- y_df |> filter(I_order == D_n,
+                            dataset %in% ds_subset) |> 
+  rename(D_n = I_order)
+```
+
+```{r, fig.height = 6}
+plot_x_prediction_facets(x_summary, y_subset)
+```
+
+```{r, fig.height = 6}
+plot_x_prediction(x_summary, y_subset)
+```
+
+```{r}
+x_summary <- make_x_summary(ll_list2[[D_n]][ds_subset]) 
+
+y_subset  <- y_df |> filter(I_order == D_n,
+                            dataset %in% ds_subset) |> 
+  rename(D_n = I_order)
+```
+
+```{r, fig.height = 6}
+plot_x_prediction_facets(x_summary, y_subset)
+```
+
+```{r, fig.height = 6}
+plot_x_prediction(x_summary, y_subset)
+```
+
+## Second-order data
+
+```{r}
+D_m <- 3
+D_n <- 2
+```
+
+```{r}
+M_m        <- 3
+fltr       <- map_lgl(all_files, \(fl_list) fl_list$E_ord == M_m)
+info_files <- all_files[fltr]
+
+create_backup_fldrs(D_m, D_n, n_data, M_m, M_n, root_fldr)
+```
+
+
+```{r}
+ll_list[[D_n]] <- fit_datasets(D_m, D_n, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain)
+```
+
+```{r}
+M_m        <- 1
+
+fltr       <- map_lgl(all_files, \(fl_list) {
+  fl_list$E_ord == M_m & fl_list$I_ord %in% M_n
+})
+
+info_files <- all_files[fltr]
+
+create_backup_fldrs(D_m, D_n, n_data, M_m, M_n, root_fldr)
+```
+
+```{r}
+ll_list2[[D_n]] <- fit_datasets(D_m, D_n, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain)
+```
+
+```{r}
+ds_subset <- c(1, 5, 10, 20)
+
+df1 <- do.call("bind_rows", ll_list[[D_n]][ds_subset])
+df2 <- do.call("bind_rows", ll_list2[[D_n]][ds_subset])
+
+comparison_df <- bind_rows(df1, df2) |> 
+  mutate(R0 = beta * inv_gamma_val,
+         I0 = I0 * M_n)
+```
+
+```{r}
+plot_par_comparison(comparison_df, "R0", 1.25 * inv_gamma_val, D_m, D_n, "R[0]")
+```
+
+```{r}
+plot_par_comparison(comparison_df, "rho", 0.75, D_m, D_n, "rho")
+```
+
+```{r}
+plot_par_comparison(comparison_df, "I0", 1 * D_n, D_m, D_n, "I[0]")
+```
+
+
+## Third-order data
+
+```{r}
+D_m <- 3
+D_n <- 3
+create_backup_fldrs(D_m, D_n, n_data, M_m, M_n, root_fldr)
+```
+
+```{r}
+M_m        <- 3
+fltr       <- map_lgl(all_files, \(fl_list) fl_list$E_ord == M_m)
+info_files <- all_files[fltr]
+
+create_backup_fldrs(D_m, D_n, n_data, M_m, M_n, root_fldr)
+```
+
+
+```{r}
+ll_list[[D_n]] <- fit_datasets(D_m, D_n, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain)
+```
+
+
+
+```{r}
+M_m        <- 1
+
+fltr       <- map_lgl(all_files, \(fl_list) {
+  fl_list$E_ord == M_m & fl_list$I_ord %in% M_n
+})
+
+info_files <- all_files[fltr]
+
+create_backup_fldrs(D_m, D_n, n_data, M_m, M_n, root_fldr)
+```
+
+```{r}
+ll_list2[[D_n]] <- fit_datasets(D_m, D_n, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain)
+```
+
+```{r}
+ds_subset <- c(1, 5, 10, 20)
+
+df1 <- do.call("bind_rows", ll_list[[D_n]][ds_subset])
+df2 <- do.call("bind_rows", ll_list2[[D_n]][ds_subset])
+
+comparison_df <- bind_rows(df1, df2) |> 
+  mutate(R0 = beta * inv_gamma_val,
+         I0 = I0 * M_n)
+```
+
+```{r}
+plot_par_comparison(comparison_df, "R0", 1.25 * inv_gamma_val, D_m, D_n, "R[0]")
+```
+
+```{r}
+plot_par_comparison(comparison_df, "rho", 0.75, D_m, D_n, "rho")
+```
+
+```{r}
+plot_par_comparison(comparison_df, "I0", 1 * D_n, D_m, D_n, "I[0]")
+```
+
+## Fourth-order data
+
+```{r}
+D_m <- 3
+D_n <- 4
+```
+
+```{r}
+M_m        <- 3
+fltr       <- map_lgl(all_files, \(fl_list) fl_list$E_ord == M_m)
+info_files <- all_files[fltr]
+
+create_backup_fldrs(D_m, D_n, n_data, M_m, M_n, root_fldr)
+```
+
+
+```{r}
+ll_list[[D_n]] <- fit_datasets(D_m, D_n, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain)
+```
+
+```{r}
+M_m        <- 1
+
+fltr       <- map_lgl(all_files, \(fl_list) {
+  fl_list$E_ord == M_m & fl_list$I_ord %in% M_n
+})
+
+info_files <- all_files[fltr]
+
+create_backup_fldrs(D_m, D_n, n_data, M_m, M_n, root_fldr)
+```
+
+```{r}
+ll_list2[[D_n]] <- fit_datasets(D_m, D_n, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain)
+```
+
+
+```{r}
+ds_subset <- c(1, 5, 10, 20)
+
+df1 <- do.call("bind_rows", ll_list[[D_n]][ds_subset])
+df2 <- do.call("bind_rows", ll_list2[[D_n]][ds_subset])
+
+comparison_df <- bind_rows(df1, df2) |> 
+  mutate(R0 = beta * inv_gamma_val,
+         I0 = I0 * M_n)
+```
+
+```{r}
+plot_par_comparison(comparison_df, "R0", 1.25 * inv_gamma_val, D_m, D_n, "R[0]")
+```
+
+```{r}
+plot_par_comparison(comparison_df, "rho", 0.75, D_m, D_n, "rho")
+```
+
+```{r}
+plot_par_comparison(comparison_df, "I0", 1 * D_n, D_m, D_n, "I[0]")
+```
+
+# Summary
+
+```{r}
+ll_df <- map_df(ll_list, function(dataset_fitlist) {
+  
+  map_df(dataset_fitlist, \(posterior_df) {
+    posterior_df |> select(beta, rho, log_lik, D_n, M_m, M_n, dataset)
+  })
+})
+```
+
+```{r}
+r_df <- ll_df |> mutate(R_0 = beta * inv_gamma_val,
+                        id  = paste(D_n, M_n, dataset,
+                                    sep = "_"))
+```
+
+# MLE criterion
+
+```{r}
+MLE_df <- MLE_choice(ll_df)
+```
+
+```{r}
+ggplot(MLE_df, aes(x = M_n)) +
+  geom_bar(colour = "steelblue", fill = "white") +
+  facet_wrap(~D_n) +
+  scale_x_continuous(breaks = 1:9) +
+  theme_pubr()
+```
+
+```{r}
+table_success(MLE_df, n_data)
+```
+
+## Wrong E
+
+```{r}
+ll_df <- map_df(ll_list2, function(dataset_fitlist) {
+  
+  map_df(dataset_fitlist, \(posterior_df) {
+    posterior_df |> select(beta, rho, log_lik, D_n, M_m, M_n, dataset)
+  })
+})
+```
+
+```{r}
+r_df <- ll_df |> mutate(R_0 = beta * inv_gamma_val,
+                        id  = paste(D_n, M_n, dataset,
+                                    sep = "_"))
+```
+
+# MLE criterion
+
+```{r}
+  ll_df |> 
+    select(D_n, M_n, dataset, log_lik) |> 
+    group_by(D_n, dataset) |> 
+    filter(log_lik == max(log_lik)) |> 
+    filter(M_n == min(M_n)) |> 
+    ungroup() |> 
+    unique() |> 
+    mutate(error      = abs(M_n - D_n),
+           sqrt_error = (M_n - D_n) ** 2)
+```
+
+
+```{r}
+MLE_df <- MLE_choice(ll_df)
+```
+
+```{r}
+ggplot(MLE_df, aes(x = M_n)) +
+  geom_bar(colour = "steelblue", fill = "white") +
+  facet_wrap(~D_n) +
+  scale_x_continuous(breaks = 1:4, limits = c(1, 5)) +
+  theme_pubr()
+```
+
+```{r}
+table_success(MLE_df, n_data)
+```

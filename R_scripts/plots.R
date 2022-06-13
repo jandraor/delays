@@ -167,3 +167,24 @@ plot_CV_boundaries <- function(y_df, boundaries_df) {
     facet_wrap("I_order", ncol = 1) +
     theme_pubr()
 }
+
+plot_par_comparison <- function(df, par_name, actual_value, D_m, D_n, x_label) {
+  
+  capt <- paste(str_glue("True E order: {D_m}"),
+                str_glue("True I order: {D_n}"),
+                sep = "\n")
+  
+  df <- df |> 
+    mutate(M_n = str_glue("I^{M_n}"))
+  
+  ggplot(df, aes(.data[[par_name]])) +
+    geom_histogram(aes(fill = as.factor(M_m)), colour = "white", alpha = 0.6) +
+    facet_grid(M_n ~ dataset, labeller = label_parsed) +
+    geom_vline(xintercept = actual_value, colour = "grey85", linetype = "dotdash") +
+    scale_fill_manual(values = c("steelblue", "grey60"), name = "E order") +
+    labs(y = "", caption = capt, x = parse(text = x_label)) +
+    theme_pubr() +
+    theme(axis.ticks.y = element_blank(),
+          axis.text.y  = element_blank(),
+          axis.line.y  = element_blank())
+}

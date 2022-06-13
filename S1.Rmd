@@ -24,17 +24,17 @@ source("./R_scripts/utils.R")
 # Synthetic data
 
 ```{r params1}
-N_val         <- 5e3 # Population size
+N_val         <- 1e4 # Population size
 inv_sigma_val <- 2
 inv_gamma_val <- 2 # infectious period
-beta_val      <- 1
+beta_val      <- 1.25
 R0_val        <- beta_val * inv_gamma_val
 rho_val       <- 0.75
 n_ds          <- 20
 
 m_val   <- 1
-n_val   <- 5
-ts_val  <- 70
+n_val   <- 1:4
+ts_val  <- 60
 ```
 
 ## Case 1
@@ -90,17 +90,50 @@ if(!file.exists(syn_data_file)) {
 }
 ```
 
+## Case 3
+
+```{r}
+m_val <- 3
+n_val <- 1:4
+phi_val <- 0 # Poisson
+
+set.seed(1653)
+
+y_list <- lapply(1:n_ds, function(i) {
+  
+  SEIR_measured_incidence(m_val, n_val, N_val, beta_val, inv_sigma_val, 
+                          inv_gamma_val, rho_val, ts_val,phi_val) |> 
+    mutate(dataset = i)
+})
+```
+
+
+```{r}
+plot_incidence(y_list, "Poisson")
+```
+
+```{r}
+syn_data_file <- "./data/Synthetic/SEIR/Case_3.csv"
+
+if(!file.exists(syn_data_file)) {
+  write_csv(do.call(rbind, y_list), syn_data_file)
+}
+```
+
 # Stan files
 
 ## Poisson
 
 
 ```{r}
-M_m <- 1
-M_n <- 9
+m_list <- list(1, 3)
+n_list <- list(1:9, 1:4)
 
-info_files <- create_SEIR_files(M_m, M_n, inv_sigma_val, inv_gamma_val, N_val, 
+info_files <- map2(m_list, n_list, \(m, n) {
+  
+  info_files <- create_SEIR_files(m, n, inv_sigma_val, inv_gamma_val, N_val, 
                                 "pois")
+}) |> unlist(recursive = FALSE)
 
 saveRDS(info_files, "./Stan_files/SEIR/Pois/meta_info.rds")
 ```
@@ -110,11 +143,10 @@ saveRDS(info_files, "./Stan_files/SEIR/Pois/meta_info.rds")
 
 ```{r}
 M_m <- 1
-M_n <- 9
+M_n <- 1:9
 
 info_files <- create_SEIR_files(M_m, M_n, inv_sigma_val, inv_gamma_val, N_val, 
                                 "nbin")
 
 saveRDS(info_files, "./Stan_files/SEIR/Nbin/meta_info.rds")
 ```
-

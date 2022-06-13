@@ -1,6 +1,6 @@
 create_SEIR_files <- function(m, n, inv_sigma, inv_gamma, N, meas_model) {
   
-  orders <- cross2(1:m, 1:n)
+  orders <- cross2(m, n)
   
   lapply(orders, function(ord_obj) {
     
@@ -72,6 +72,16 @@ create_SEIR_files <- function(m, n, inv_sigma, inv_gamma, N, meas_model) {
     if(I_ord > 1) {
       indexes <- 5 + 1:(I_ord - 1)
       additional_stocks <- str_glue("  x0[{indexes}] = I0;") |> 
+        paste(collapse = "\n")
+      
+      stan_tp1 <- paste(stan_tp1, additional_stocks, sep = "\n")
+    }
+    
+    if(E_ord > 1) {
+      
+      indexes <- 5 + I_ord - 1 + 1:(E_ord - 1)
+      
+      additional_stocks <- str_glue("  x0[{indexes}] = 0;") |> 
         paste(collapse = "\n")
       
       stan_tp1 <- paste(stan_tp1, additional_stocks, sep = "\n")

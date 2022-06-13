@@ -4,11 +4,11 @@ create_stan_file <- function(stan_text, filename) {
   close(file_connection)
 }
 
-create_backup_fldrs <- function(D_m, D_n, n_data, M_m_max, M_n_max, root_fldr) {
+create_backup_fldrs <- function(D_m, D_n, n_data, M_m, M_n, root_fldr) {
   
   data_ids <- 1:n_data
   
-  id_list  <- cross3(data_ids, 1:M_m_max, 1:M_n_max)
+  id_list  <- cross3(data_ids,  M_m, M_n)
   
   walk(id_list, function(id_obj) {
     
