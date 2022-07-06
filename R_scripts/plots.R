@@ -76,21 +76,14 @@ plot_nbin_pars <- function(df, inv_gamma_val, beta_val, phi_val, rho_val) {
     theme(legend.position = "none")
 }
 
-plot_error_by_L <- function(df, error_var = "error") {
+plot_error_by_L <- function(df, subtitle = "") {
   
-  if(error_var == "error") {
-    g <-   ggplot(df, aes(x = L_min, y = L_max)) +
-      geom_tile(aes(fill = sqrt(error)))
-  }
-  
-  if(error_var == "sqrt_error") {
-    g <-   ggplot(df, aes(x = L_min, y = L_max)) +
-      geom_tile(aes(fill = sqrt(sqrt_error)))
-  }
-  
-  g +
+  ggplot(df, aes(x = L_min, y = L_max)) +
+    geom_tile(aes(fill = sqrt(error))) +
     scale_fill_viridis(discrete = FALSE) +
+    labs(subtitle = subtitle) +
     theme_pubr()
+      
 }
 
 plot_min_error <- function(df, tol = 0, error_var = "error") {
@@ -100,8 +93,8 @@ plot_min_error <- function(df, tol = 0, error_var = "error") {
       mutate(id = row_number())
   }
   
-  if(error_var == "sqrt_error") {
-    df_min <- df |> filter(sqrt_error <= min(sqrt_error) + tol) |> 
+  if(error_var == "sqr_error") {
+    df_min <- df |> filter(sqr_error <= min(sqr_error) + tol) |> 
       mutate(id = row_number())
   }
   
@@ -187,4 +180,30 @@ plot_par_comparison <- function(df, par_name, actual_value, D_m, D_n, x_label) {
     theme(axis.ticks.y = element_blank(),
           axis.text.y  = element_blank(),
           axis.line.y  = element_blank())
+}
+
+plot_prediction_comparison <- function(ELDP_default, ELDP_best, MLE_results, D_n) {
+  
+  MLE_predictions <- MLE_results |> 
+    filter(D_n == !!D_n) |> 
+    select(M_n, n, window)
+  
+  ELDP_default <- ELDP_default |> mutate(window = "LFO-CV (all points)")
+  ELDP_best    <- ELDP_best |> mutate(window = "LFO-CV (optim)")
+  
+  ELDP_df <- bind_rows(ELDP_default, ELDP_best)
+  
+  summary_predictions <- ELDP_df |> 
+    group_by(M_n, window) |> 
+    summarise(n = n(), .groups = "drop") |> 
+    bind_rows(MLE_predictions) |> 
+    mutate(is_correct = ifelse(D_n == M_n, TRUE, FALSE))
+  
+  ggplot(summary_predictions, aes(M_n, n)) +
+    geom_col(aes(fill = is_correct), colour = "white") +
+    scale_fill_manual(values = c("grey65", "steelblue")) +
+    facet_wrap(~window) +
+    scale_x_continuous(limits = c(0, 5)) +
+    labs(y = "Count", x = bquote(I^n)) +
+    theme_pubr()
 }
