@@ -1,0 +1,177 @@
+---
+title: "S2"
+output: html_document
+---
+
+MLE, Case 1
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+
+library(cmdstanr)
+library(dplyr)
+library(purrr)
+library(readr)
+library(readsdr)
+library(rstan)
+library(stringr)
+library(tictoc)
+library(tidyr)
+
+source("./R_scripts/Inference.R")
+source("./R_scripts/model_selection.R")
+source("./R_scripts/plots.R")
+source("./R_scripts/posterior_utils.R")
+source("./R_scripts/SEIR_stan_files.R")
+source("./R_scripts/tables.R")
+source("./R_scripts/utils.R")
+```
+
+# Synthetic data
+
+```{r}
+inv_gamma_val <- 2
+y_df          <- read_csv("./data/Synthetic/SEIR/Case_1.csv")
+```
+
+## Latent states
+
+```{r}
+plot_ts_by_I_order(y_df)
+```
+
+## Measurements
+
+
+```{r}
+ggplot(y_df, aes(time, y)) +
+  geom_line(aes(group = dataset), colour = "grey75", alpha = 0.1) +
+  facet_wrap("I_order") +
+  theme_pubr()
+```
+
+# Inference
+
+```{r}
+root_fldr <- "./Saved_objects/Inference/Synthetic_data/SEIR/Case_1"
+
+n_chains          <- 4
+samples_per_chain <- 1000
+
+M_m_max  <- 1
+M_n_max  <- 4
+n_data   <- 20
+
+info_files <- readRDS("./Stan_files/SEIR/Pois/meta_info.rds")[1:M_n_max]
+
+ll_list <- vector(mode = "list", length = M_n_max)
+```
+
+## First-order data
+
+```{r}
+D_m <- 1
+D_n <- 1
+create_backup_fldrs(D_m, D_n, n_data, M_m_max, M_n_max, root_fldr)
+```
+
+```{r}
+ll_list[[D_n]] <- fit_datasets(D_m, D_n, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain)
+```
+
+
+## Second-order data
+
+```{r}
+D_m <- 1
+D_n <- 2
+create_backup_fldrs(D_m, D_n, n_data, M_m_max, M_n_max, root_fldr)
+```
+
+```{r}
+ll_list[[D_n]] <- fit_datasets(D_m, D_n, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain)
+```
+
+## Third-order data
+
+```{r}
+D_m <- 1
+D_n <- 3
+create_backup_fldrs(D_m, D_n, n_data, M_m_max, M_n_max, root_fldr)
+```
+
+```{r}
+ll_list[[D_n]] <- fit_datasets(D_m, D_n, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain)
+```
+
+## Fourth-order data
+
+```{r}
+D_m <- 1
+D_n <- 4
+create_backup_fldrs(D_m, D_n, n_data, M_m_max, M_n_max, root_fldr)
+```
+
+```{r}
+ll_list[[D_n]] <- fit_datasets(D_m, D_n, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain)
+```
+
+```{r}
+ds_subset <- c(1, 5, 10, 20)
+x_summary <- make_x_summary(ll_list[[D_n]][ds_subset]) 
+y_subset  <- y_df |> filter(I_order == D_n,
+                            dataset %in% ds_subset) |> 
+  rename(D_n = I_order)
+```
+
+```{r, fig.height = 6}
+plot_x_prediction_facets(x_summary, y_subset)
+```
+
+```{r, fig.height = 6}
+plot_x_prediction(x_summary, y_subset)
+```
+
+# Summary
+
+```{r}
+ll_df <- map_df(ll_list, function(dataset_fitlist) {
+  
+  map_df(dataset_fitlist, \(posterior_df) {
+    posterior_df |> select(beta, rho, log_lik, D_n, M_m, M_n, dataset)
+  })
+})
+```
+
+```{r}
+r_df <- ll_df |> mutate(R_0 = beta * inv_gamma_val,
+                        id  = paste(D_n, M_n, dataset,
+                                    sep = "_"))
+```
+
+# MLE criterion
+
+```{r}
+MLE_df <- MLE_choice(ll_df)
+
+MLE_df |> group_by(D_n, M_n) |> 
+  summarise(n = n(), .groups = "drop") |> 
+  mutate(window = "MLE") |> 
+  write_csv(file.path(root_fldr, "MLE_choice.csv"))
+```
+
+```{r}
+ggplot(MLE_df, aes(x = M_n)) +
+  geom_bar(colour = "steelblue", fill = "white") +
+  facet_wrap(~D_n) +
+  scale_x_continuous(breaks = 1:9) +
+  theme_pubr()
+```
+
+```{r}
+table_success(MLE_df, n_data)
+```

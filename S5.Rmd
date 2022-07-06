@@ -1,18 +1,12 @@
 ---
-title: "S4"
+title: "S5"
 output: html_document
-date: '2022-06-10'
 ---
 
-Choice by MLE,
-
-D_m = 3
-
-MLE for case 3
-
+MLE for case 4
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 
 library(cmdstanr)
 library(dplyr)
@@ -38,7 +32,7 @@ source("./R_scripts/utils.R")
 
 ```{r}
 inv_gamma_val <- 2
-y_df          <- read_csv("./data/Synthetic/SEIR/Case_3.csv")
+y_df <- read_csv("./data/Synthetic/SEIR/Case_4.csv")
 ```
 
 ## Latent states
@@ -60,13 +54,13 @@ ggplot(y_df, aes(time, y)) +
 # Inference
 
 ```{r}
-root_fldr <- "./Saved_objects/Inference/Synthetic_data/SEIR/Case_3"
+root_fldr <- "./Saved_objects/Inference/Synthetic_data/SEIR/Case_4"
 
 n_chains          <- 4
 samples_per_chain <- 1000
 
 n_data    <- 20
-all_files <- readRDS("./Stan_files/SEIR/Pois/meta_info.rds")
+all_files <- readRDS("./Stan_files/SEIR/Nbin/meta_info.rds")
 M_n       <- 1:4
 
 ll_list  <- vector(mode = "list", length = length(M_n))
@@ -110,7 +104,6 @@ ll_list2[[D_n]] <- fit_datasets(D_m, D_n, n_data, y_df, info_files,
                                root_fldr, n_chains, samples_per_chain)
 ```
 
-
 ```{r}
 ds_subset <- c(1, 5, 10, 20)
 
@@ -148,21 +141,6 @@ plot_x_prediction_facets(x_summary, y_subset)
 plot_x_prediction(x_summary, y_subset)
 ```
 
-```{r}
-x_summary <- make_x_summary(ll_list2[[D_n]][ds_subset]) 
-
-y_subset  <- y_df |> filter(I_order == D_n,
-                            dataset %in% ds_subset) |> 
-  rename(D_n = I_order)
-```
-
-```{r, fig.height = 6}
-plot_x_prediction_facets(x_summary, y_subset)
-```
-
-```{r, fig.height = 6}
-plot_x_prediction(x_summary, y_subset)
-```
 
 ## Second-order data
 
@@ -351,6 +329,7 @@ plot_par_comparison(comparison_df, "rho", 0.75, D_m, D_n, "rho")
 ```{r}
 plot_par_comparison(comparison_df, "I0", 1 * D_n, D_m, D_n, "I[0]")
 ```
+
 
 # Summary
 

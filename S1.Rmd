@@ -1,3 +1,10 @@
+---
+title: "S1"
+output: html_document
+---
+
+Data generation
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 
@@ -120,6 +127,37 @@ if(!file.exists(syn_data_file)) {
 }
 ```
 
+## Case 4
+
+```{r}
+phi_val <- 1/3
+m_val   <- 3
+n_val   <- 1:4
+
+
+set.seed(1928)
+
+y_list <- lapply(1:n_ds, function(i) {
+  
+  SEIR_measured_incidence(m_val, n_val, N_val, beta_val, inv_sigma_val, 
+                          inv_gamma_val, rho_val, ts_val,phi_val) |> 
+    mutate(dataset = i)
+})
+```
+
+
+```{r}
+plot_incidence(y_list, "Negative Binomial")
+```
+
+```{r}
+syn_data_file <- "./data/Synthetic/SEIR/Case_4.csv"
+
+if(!file.exists(syn_data_file)) {
+  write_csv(do.call(rbind, y_list), syn_data_file)
+}
+```
+
 # Stan files
 
 ## Poisson
@@ -142,11 +180,14 @@ saveRDS(info_files, "./Stan_files/SEIR/Pois/meta_info.rds")
 ## Negative binomial
 
 ```{r}
-M_m <- 1
-M_n <- 1:9
+m_list <- list(1, 3)
+n_list <- list(1:9, 1:4)
 
-info_files <- create_SEIR_files(M_m, M_n, inv_sigma_val, inv_gamma_val, N_val, 
-                                "nbin")
+info_files <- map2(m_list, n_list, \(m, n) {
+  
+  create_SEIR_files(m, n, inv_sigma_val, inv_gamma_val, N_val, "nbin")
+  
+}) |> unlist(recursive = FALSE)
 
 saveRDS(info_files, "./Stan_files/SEIR/Nbin/meta_info.rds")
 ```

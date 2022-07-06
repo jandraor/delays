@@ -40,14 +40,14 @@ bayesian_choice <- function(ll_df, data_orders, model_orders, n_data,
 MLE_choice <- function(ll_df) {
   
   ll_df |> 
-    select(D_n, M_n, dataset, log_lik) |> 
+    select(D_m, D_n, M_m, M_n, dataset, log_lik) |> 
     group_by(D_n, dataset) |> 
     filter(log_lik == max(log_lik)) |> 
     filter(M_n == min(M_n)) |> 
     ungroup() |> 
     unique() |> 
     mutate(error      = abs(M_n - D_n),
-           sqrt_error = (M_n - D_n) ** 2)
+           sqr_error = (M_n - D_n) ** 2)
 }
 
 ELDP_choice <- function(n_data, y_df, D_n, M_n_list, all_fits, L, L_min, meas_mdl, L_max = Inf) {
@@ -109,7 +109,7 @@ evaluate_L <- function(n_data, y_df, D_n, M_n_list,all_fits, L_min, L_max,
         data.frame(L_min       = L, 
                    L_max       = L_max,
                    error       = sum(choice_df$error),
-                   sqrt_error  = sum(choice_df$sqrt_error),
+                   sqr_error   = sum(choice_df$sqrt_error),
                    n_successes = sum(choice_df$is_correct))
         
       }) -> result

@@ -45,3 +45,25 @@ find_first_time <- function(df) {
   
   df |> slice(1) |> pull(time)
 }
+
+save_MLE_choice <- function(MLE_df, root_fldr) {
+  
+  MLE_df |> group_by(D_n, M_n) |> 
+    summarise(n = n(), .groups = "drop") |> 
+    mutate(window = "MLE") |> 
+    write_csv(file.path(root_fldr, "MLE_choice.csv"))
+}
+
+estimate_MLE_score <- function(MLE_results) {
+  
+  MLE_results |> 
+    mutate(sqr_error = ((D_n - M_n) ** 2) * n,
+           is_correct = D_n == M_n) |> 
+    group_by(window, D_n) |> 
+    mutate(n_correct = n * is_correct) |> 
+    summarise(sqrt_error  = sum(sqr_error),
+              pct_success = n_correct / sum(n),
+              .groups     = "drop") |> 
+    group_by(window, D_n, sqrt_error) |> 
+    summarise(pct_success = sum(pct_success), .groups = "drop")
+}
