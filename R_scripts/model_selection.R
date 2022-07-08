@@ -115,12 +115,12 @@ evaluate_L <- function(n_data, y_df, D_n, M_n_list,all_fits, L_min, L_max,
       }) -> result
     })
     
-    saveRDS(result, fp)
+    write_csv(result, fp)
     
     
     
   } else {
-    result <- readRDS(fp)
+    result <- read_csv(fp, show_col_types = FALSE)
   }
    
   result

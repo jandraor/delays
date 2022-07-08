@@ -161,6 +161,24 @@ plot_CV_boundaries <- function(y_df, boundaries_df) {
     theme_pubr()
 }
 
+plot_CV_boundary <- function(y_df, I_order, ll, ul) {
+  
+  demo_df <- y_df |> filter(dataset == 1, I_order == !!I_order ) |> 
+    select(time, x, I_order) |> 
+    mutate(fill  = ifelse(time >= ll & time <= ul, TRUE, FALSE),
+           point = ifelse(time == ll | time == ul, TRUE, FALSE))
+  
+  point_df <- demo_df |> filter(point == TRUE)
+  
+  ggplot(demo_df, aes(time, x)) +
+    geom_area(aes(fill = fill)) +
+    geom_line(colour = "steelblue", size = 0.1) +
+    geom_point(data = point_df, size = 0.1, colour = "orange") +
+    scale_fill_manual(values = c("white", "grey95")) +
+    theme_pubr() +
+    theme(legend.position = "none")
+}
+
 plot_par_comparison <- function(df, par_name, actual_value, D_m, D_n, x_label) {
   
   capt <- paste(str_glue("True E order: {D_m}"),
