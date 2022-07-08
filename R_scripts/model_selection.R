@@ -50,7 +50,27 @@ MLE_choice <- function(ll_df) {
            sqr_error = (M_n - D_n) ** 2)
 }
 
-ELDP_choice <- function(n_data, y_df, D_n, M_n_list, all_fits, L, L_min, meas_mdl, L_max = Inf) {
+
+
+#' Title
+#'
+#' @param n_data 
+#' @param y_df 
+#' @param D_n 
+#' @param M_n_list 
+#' @param all_fits 
+#' @param L 
+#' @param L_min 
+#' @param meas_mdl 
+#' @param L_max 
+#' @param D_n_star An integer that the user assumes as the 'correct' order of 
+#' the infectious period. For step-wise selection, this value can differ from 
+#' D_n.
+#'
+#' @return
+#' @examples
+ELDP_choice <- function(n_data, y_df, D_n, M_n_list, all_fits, L, L_min, 
+                        meas_mdl, L_max = Inf, D_n_star) {
   
   map_df(1:n_data, function(ds) {
     
@@ -65,13 +85,13 @@ ELDP_choice <- function(n_data, y_df, D_n, M_n_list, all_fits, L, L_min, meas_md
     
   }) -> choice_df
   
-  choice_df |> mutate(error      = abs(D_n - M_n),
-                      sqrt_error = (D_n - M_n) ** 2,
-                      is_correct = ifelse(D_n == M_n, TRUE, FALSE))
+  choice_df |> mutate(error      = abs(D_n_star - M_n),
+                      sqrt_error = (D_n_star - M_n) ** 2,
+                      is_correct = ifelse(D_n_star == M_n, TRUE, FALSE))
 }
 
 evaluate_L <- function(n_data, y_df, D_n, M_n_list,all_fits, L_min, L_max,
-                       meas_mdl, fp) {
+                       meas_mdl, fp, D_n_star = NULL) {
   
   if(!file.exists(fp)) {
     
@@ -103,8 +123,10 @@ evaluate_L <- function(n_data, y_df, D_n, M_n_list,all_fits, L_min, L_max,
         L     <- comb_obj[[1]]
         L_max <- comb_obj[[2]]
         
+        if(is.null(D_n_star)) D_n_star <- D_n
+        
         choice_df <- ELDP_choice(n_data, y_df, D_n, M_n_list, all_fits, L, 
-                                 L_min, meas_mdl, L_max)
+                                 L_min, meas_mdl, L_max, D_n_star)
         
         data.frame(L_min       = L, 
                    L_max       = L_max,

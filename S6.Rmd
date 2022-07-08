@@ -118,11 +118,12 @@ print(error_df)
 
 ```{r}
 ELDP_default          <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, L_min, 
-                                     L_min, meas_mdl, L_max) 
+                                     L_min, meas_mdl, L_max, D_n) 
 LFO_CV_default[[D_n]] <- ELDP_default
 
 ELDP_best           <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, 
-                                   bounds[[1]], L_min, meas_mdl, bounds[[2]])
+                                   bounds[[1]], L_min, meas_mdl, 
+                                   bounds[[2]], D_n)
 LFO_CV_optim[[D_n]] <- ELDP_best
 ```
 
@@ -151,7 +152,7 @@ plot_CV_boundary(y_df, D_n, 5, 31)
 
 ```{r}
 ELDP_df <- ELDP_choice(n_data, y_df, D_n, M_n_list, all_fits, 20, L_min, 
-                       meas_mdl, 43)
+                       meas_mdl, 43, D_n)
 
 data.frame(D_n = D_n, 
            n_sucesses = sum(ELDP_df$is_correct), 
@@ -161,7 +162,7 @@ data.frame(D_n = D_n,
 
 ```{r}
 ELDP_df <- ELDP_choice(n_data, y_df, D_n, M_n_list, all_fits, 26, L_min, 
-                       meas_mdl, 35)
+                       meas_mdl, 35, D_n)
 
 data.frame(D_n = D_n, 
            n_sucesses = sum(ELDP_df$is_correct), 
@@ -214,13 +215,14 @@ print(error_df)
 
 
 ```{r}
-ELDP_default          <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, L_min, 
-                                     L_min, meas_mdl, L_max) 
-LFO_CV_default[[D_n]] <- ELDP_default
+ELDP_default <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, L_min, L_min, 
+                            meas_mdl, L_max, D_n) 
 
-ELDP_best           <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, 
-                                   bounds[[1]], L_min, meas_mdl, bounds[[2]])
-LFO_CV_optim[[D_n]] <- ELDP_best
+ELDP_best    <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits,   bounds[[1]], 
+                            L_min, meas_mdl, bounds[[2]],  D_n)
+
+LFO_CV_default[[D_n]] <- ELDP_default
+LFO_CV_optim[[D_n]]   <- ELDP_best
 ```
 
 ```{r, message = FALSE}
@@ -246,7 +248,7 @@ plot_CV_boundary(y_df, D_n, 5, 15)
 
 ```{r}
 ELDP_df <- ELDP_choice(n_data, y_df, D_n, M_n_list, all_fits, 20, L_min, 
-                       meas_mdl, 46)
+                       meas_mdl, 46, D_n)
 
 data.frame(D_n = D_n, 
            n_sucesses = sum(ELDP_df$is_correct), 
@@ -256,7 +258,7 @@ data.frame(D_n = D_n,
 
 ```{r}
 ELDP_df <- ELDP_choice(n_data, y_df, D_n, M_n_list, all_fits, 27, L_min, 
-                       meas_mdl, L_max)
+                       meas_mdl, L_max, D_n)
 
 data.frame(D_n = D_n, 
            n_sucesses = sum(ELDP_df$is_correct), 
@@ -307,13 +309,14 @@ print(error_df)
 ```
 
 ```{r}
-ELDP_default          <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, L_min, 
-                                     L_min, meas_mdl, L_max) 
-LFO_CV_default[[D_n]] <- ELDP_default
+ELDP_default <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, L_min, 
+                                     L_min, meas_mdl, L_max, D_n) 
 
-ELDP_best           <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, 
-                                   bounds[[1]], L_min, meas_mdl, bounds[[2]])
-LFO_CV_optim[[D_n]] <- ELDP_best
+ELDP_best    <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, bounds[[1]], 
+                            L_min, meas_mdl, bounds[[2]], D_n)
+
+LFO_CV_default[[D_n]] <- ELDP_default
+LFO_CV_optim[[D_n]]   <- ELDP_best
 ```
 
 ```{r, message = FALSE}
@@ -322,9 +325,10 @@ plot_prediction_comparison(ELDP_default, ELDP_best, MLE_results, D_n)
 
 ```{r}
 M_n_list <- c(1:2)
+D_n_star <- 2
 fp       <- str_glue("{root_fldr}/D1{D_n}/L_analysis_1_2.csv")
 L_df     <- evaluate_L(n_data, y_df, D_n, M_n_list, all_fits, L_min, L_max, 
-                       meas_mdl, fp)
+                       meas_mdl, fp, D_n_star)
 ```
 
 ```{r}
@@ -341,7 +345,7 @@ L_df |> filter(error <= min(error) + 2) |> mutate(range = L_max - L_min) |> arra
 
 ```{r}
 ELDP_df <- ELDP_choice(n_data, y_df, D_n, M_n_list, all_fits, 24, L_min, 
-                       meas_mdl, 50)
+                       meas_mdl, 50, D_n_star)
 
 data.frame(D_n = D_n, 
            n_sucesses = sum(ELDP_df$is_correct), 
@@ -392,13 +396,14 @@ print(error_df)
 
 
 ```{r}
-ELDP_default          <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, L_min, 
-                                     L_min, meas_mdl, L_max) 
-LFO_CV_default[[D_n]] <- ELDP_default
+ELDP_default <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, L_min, L_min, 
+                            meas_mdl, L_max, D_n) 
 
-ELDP_best           <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, 
-                                   bounds[[1]], L_min, meas_mdl, bounds[[2]])
-LFO_CV_optim[[D_n]] <- ELDP_best
+ELDP_best    <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, bounds[[1]], 
+                            L_min, meas_mdl, bounds[[2]], D_n)
+
+LFO_CV_default[[D_n]] <- ELDP_default
+LFO_CV_optim[[D_n]]   <- ELDP_best
 ```
 
 ```{r, message = FALSE}
@@ -407,9 +412,10 @@ plot_prediction_comparison(ELDP_default, ELDP_best, MLE_results, D_n)
 
 ```{r}
 M_n_list <- c(1:2)
+D_n_star <- 2
 fp       <- str_glue("{root_fldr}/D1{D_n}/L_analysis_1_2.csv")
 L_df     <- evaluate_L(n_data, y_df, D_n, M_n_list, all_fits, L_min, L_max, 
-                       meas_mdl, fp)
+                       meas_mdl, fp, D_n_star)
 ```
 
 ```{r}
@@ -426,7 +432,7 @@ L_df |> filter(error <= min(error) + 1) |> mutate(range = L_max - L_min) |> arra
 
 ```{r}
 ELDP_df <- ELDP_choice(n_data, y_df, D_n, M_n_list, all_fits, 5, L_min, 
-                       meas_mdl, 49)
+                       meas_mdl, 49, D_n_star)
 
 data.frame(D_n = D_n, 
            n_sucesses = sum(ELDP_df$is_correct), 
