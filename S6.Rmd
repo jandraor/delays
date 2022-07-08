@@ -407,7 +407,7 @@ plot_prediction_comparison(ELDP_default, ELDP_best, MLE_results, D_n)
 
 ```{r}
 M_n_list <- c(1:2)
-fp       <- str_glue("{root_fldr}/D1{D_n}/L_analysis_1_2.rds")
+fp       <- str_glue("{root_fldr}/D1{D_n}/L_analysis_1_2.csv")
 L_df     <- evaluate_L(n_data, y_df, D_n, M_n_list, all_fits, L_min, L_max, 
                        meas_mdl, fp)
 ```
