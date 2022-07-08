@@ -83,7 +83,7 @@ evaluate_L <- function(n_data, y_df, D_n, M_n_list,all_fits, L_min, L_max,
       lapply(function(obj) {
         
         diff <- obj[[2]] - obj[[1]]
-        if(diff < 1) return(NULL)
+        if(diff < 10) return(NULL) 
         
         obj
       }) |> compact()
