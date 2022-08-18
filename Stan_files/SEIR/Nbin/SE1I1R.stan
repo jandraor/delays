@@ -1,5 +1,5 @@
 functions {
-  vector SE1I1R(real time, vector y, real[] params) {
+  vector SE1I1R(real time, vector y, array[] real params) {
     vector[5] dydt;
     real S_to_E;
     real E1_to_I1;
