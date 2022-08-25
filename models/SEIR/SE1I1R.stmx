@@ -42,7 +42,7 @@
 				<outflow>I_to_R</outflow>
 			</stock>
 			<flow name="I to R">
-				<eqn>par_gamma * I1</eqn>
+				<eqn>j * par_gamma * I1</eqn>
 			</flow>
 			<stock name="R">
 				<eqn>0</eqn>
@@ -71,6 +71,9 @@
 				<eqn>1</eqn>
 			</aux>
 			<aux name="I0">
+				<eqn>1</eqn>
+			</aux>
+			<aux name="j">
 				<eqn>1</eqn>
 			</aux>
 		</variables>
@@ -232,6 +235,11 @@
 					<to>C_in</to>
 				</connector>
 				<aux x="243" y="459" name="I0"/>
+				<aux label_side="top" x="513" y="88" name="j"/>
+				<connector uid="11" angle="281.634">
+					<from>j</from>
+					<to>I_to_R</to>
+				</connector>
 			</view>
 		</views>
 	</model>

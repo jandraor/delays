@@ -42,7 +42,7 @@
 				<outflow>I1_to_I2</outflow>
 			</stock>
 			<flow name="I1 to I2">
-				<eqn>par_gamma * I1</eqn>
+				<eqn>j * par_gamma * I1</eqn>
 			</flow>
 			<stock name="R">
 				<eqn>0</eqn>
@@ -73,13 +73,16 @@
 				<outflow>I2_to_R</outflow>
 			</stock>
 			<flow name="I2 to R">
-				<eqn>par_gamma * I2</eqn>
+				<eqn>j * par_gamma * I2</eqn>
 			</flow>
 			<aux name="par rho">
 				<eqn>1</eqn>
 			</aux>
 			<aux name="I0">
 				<eqn>1</eqn>
+			</aux>
+			<aux name="j">
+				<eqn>2</eqn>
 			</aux>
 		</variables>
 		<views>
@@ -261,8 +264,23 @@
 					<to>C_in</to>
 				</connector>
 				<aux x="230" y="457" name="I0"/>
+				<aux x="472" y="234" name="j"/>
+				<connector uid="15" angle="33.6901">
+					<from>j</from>
+					<to>I1_to_I2</to>
+				</connector>
+				<connector uid="16" angle="51.1466">
+					<from>
+						<alias uid="17"/>
+					</from>
+					<to>I2_to_R</to>
+				</connector>
 				<alias font_style="italic" uid="10" x="692.5" y="239" width="18" height="18">
 					<of>par_gamma</of>
+				</alias>
+				<alias color="blue" background="white" font_style="italic" uid="17" x="641" y="231" width="18" height="18">
+					<shape type="circle" radius="18"/>
+					<of>j</of>
 				</alias>
 			</view>
 		</views>
