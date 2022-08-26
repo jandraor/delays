@@ -10,11 +10,11 @@ functions {
     real I4_to_R;
     S_to_E = params[1]*y[1]*(y[3]+y[6]+y[7]+y[8])/10000;
     E1_to_I1 = 0.5*y[2];
-    I1_to_I2 = 4*0.5*y[3];
+    I1_to_I2 = 4*params[3]*y[3];
     C_in = params[2]*E1_to_I1;
-    I2_to_I3 = 4*0.5*y[6];
-    I3_to_I4 = 4*0.5*y[7];
-    I4_to_R = 4*0.5*y[8];
+    I2_to_I3 = 4*params[3]*y[6];
+    I3_to_I4 = 4*params[3]*y[7];
+    I4_to_R = 4*params[3]*y[8];
     dydt[1] = -S_to_E;
     dydt[2] = S_to_E-E1_to_I1;
     dydt[3] = E1_to_I1-I1_to_I2;
@@ -38,6 +38,7 @@ parameters {
   real<lower = 0> par_beta;
   real<lower = 0, upper = 1> par_rho;
   real<lower = 0> I0;
+  real<lower = 0, upper = 1> par_gamma;
   real<lower = 0> inv_phi;
 }
 transformed parameters{
@@ -57,6 +58,7 @@ transformed parameters{
   x0[8] = 0; // I4
   params[1] = par_beta;
   params[2] = par_rho;
+  params[3] = par_gamma;
   x = ode_rk45(X_model, x0, t0, ts, params);
   delta_x_1[1] =  x[1, 5] - x0[5] + 1e-5;
   for (i in 1:n_obs-1) {
@@ -67,6 +69,7 @@ model {
   par_beta ~ lognormal(0, 1);
   par_rho ~ beta(2, 2);
   I0 ~ lognormal(0, 1);
+  par_gamma ~ beta(2, 2);
   inv_phi ~ exponential(5);
   y ~ neg_binomial_2(delta_x_1, phi);
 }

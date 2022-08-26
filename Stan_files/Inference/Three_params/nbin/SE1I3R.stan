@@ -9,10 +9,10 @@ functions {
     real I3_to_R;
     S_to_E = params[1]*y[1]*(y[3]+y[6]+y[7])/10000;
     E1_to_I1 = 0.5*y[2];
-    I1_to_I2 = 1.5*y[3];
+    I1_to_I2 = 3*0.5*y[3];
     C_in = params[2]*E1_to_I1;
-    I2_to_I3 = 1.5*y[6];
-    I3_to_R = 1.5*y[7];
+    I2_to_I3 = 3*0.5*y[6];
+    I3_to_R = 3*0.5*y[7];
     dydt[1] = -S_to_E;
     dydt[2] = S_to_E-E1_to_I1;
     dydt[3] = E1_to_I1-I1_to_I2;

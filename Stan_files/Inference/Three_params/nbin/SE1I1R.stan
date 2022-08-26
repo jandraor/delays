@@ -7,7 +7,7 @@ functions {
     real C_in;
     S_to_E = params[1]*y[1]*y[3]/10000;
     E1_to_I1 = 0.5*y[2];
-    I_to_R = 0.5*y[3];
+    I_to_R = 1*0.5*y[3];
     C_in = params[2]*E1_to_I1;
     dydt[1] = -S_to_E;
     dydt[2] = S_to_E-E1_to_I1;
