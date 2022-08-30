@@ -2,17 +2,21 @@ functions {
   vector X_model(real time, vector y, array[] real params) {
     vector[7] dydt;
     real E1_to_I1;
+    real C_in;
+    real aux_j;
+    real aux_tau;
     real var_beta;
     real var_gamma;
-    real C_in;
     real I2_to_I3;
     real I3_to_R;
     real S_to_E;
     real I1_to_I2;
     E1_to_I1 = 0.5*y[2];
-    var_beta = (0.5*(3+1))/(2*params[1]*(0.5*params[3]-1));
-    var_gamma = var_beta*params[1];
     C_in = params[2]*E1_to_I1;
+    aux_j = (3+1)/(2.0*3);
+    aux_tau = params[3]-(1/0.5);
+    var_beta = (1/params[1])*(aux_j/aux_tau);
+    var_gamma = var_beta*params[1];
     I2_to_I3 = 3*var_gamma*y[6];
     I3_to_R = 3*var_gamma*y[7];
     S_to_E = var_beta*y[1]*(y[3]+y[6]+y[7])/10000;

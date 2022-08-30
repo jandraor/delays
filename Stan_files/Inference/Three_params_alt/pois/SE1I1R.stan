@@ -3,13 +3,17 @@ functions {
     vector[5] dydt;
     real E1_to_I1;
     real C_in;
+    real aux_j;
+    real aux_tau;
     real var_beta;
     real var_gamma;
     real S_to_E;
     real I_to_R;
     E1_to_I1 = 0.5*y[2];
     C_in = params[2]*E1_to_I1;
-    var_beta = (0.5*(1+1))/(2*params[1]*(0.5*params[3]-1));
+    aux_j = (1+1)/(2.0*1);
+    aux_tau = params[3]-(1/0.5);
+    var_beta = (1/params[1])*(aux_j/aux_tau);
     var_gamma = var_beta*params[1];
     S_to_E = var_beta*y[1]*y[3]/10000;
     I_to_R = 1*var_gamma*y[3];
