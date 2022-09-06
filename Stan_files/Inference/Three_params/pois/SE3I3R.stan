@@ -10,12 +10,12 @@ functions {
     real E3_to_I1;
     real C_in;
     S_to_E = params[1]*y[1]*(y[3]+y[6]+y[7])/10000;
-    E1_to_E2 = 3*1.5*y[2];
+    E1_to_E2 = 3*0.5*y[2];
     I1_to_I2 = 3*0.5*y[3];
     I2_to_I3 = 3*0.5*y[6];
     I3_to_R = 3*0.5*y[7];
-    E2_to_E3 = 3*1.5*y[8];
-    E3_to_I1 = 3*1.5*y[9];
+    E2_to_E3 = 3*0.5*y[8];
+    E3_to_I1 = 3*0.5*y[9];
     C_in = params[2]*E3_to_I1;
     dydt[1] = -S_to_E;
     dydt[2] = S_to_E-E1_to_E2;
@@ -47,7 +47,7 @@ transformed parameters{
   array[n_params] real params;
   vector[n_difeq] x0; // init values
   array[n_obs] real delta_x_1;
-  x0[1] = 9997; // S
+  x0[1] = (10000) - I0; // S
   x0[2] = 0; // E1
   x0[3] = I0; // I1
   x0[4] = 0; // R

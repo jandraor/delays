@@ -10,8 +10,8 @@ functions {
     real C_in;
     S_to_E = params[1]*y[1]*(y[3]+y[6])/10000;
     E1_to_E2 = 3*0.5*y[2];
-    I1_to_I2 = 2*0.5*y[3];
-    I2_to_R = 2*0.5*y[6];
+    I1_to_I2 = 2*params[3]*y[3];
+    I2_to_R = 2*params[3]*y[6];
     E2_to_E3 = 3*0.5*y[7];
     E3_to_I1 = 3*0.5*y[8];
     C_in = params[2]*E3_to_I1;
@@ -38,12 +38,16 @@ parameters {
   real<lower = 0> par_beta;
   real<lower = 0, upper = 1> par_rho;
   real<lower = 0> I0;
+  real<lower = 0, upper = 1> par_gamma;
+  real<lower = 0> inv_phi;
 }
 transformed parameters{
   array[n_obs] vector[n_difeq] x; // Output from the ODE solver
   array[n_params] real params;
   vector[n_difeq] x0; // init values
   array[n_obs] real delta_x_1;
+  real phi;
+  phi = 1 / inv_phi;
   x0[1] = (10000) - I0; // S
   x0[2] = 0; // E1
   x0[3] = I0; // I1
@@ -54,6 +58,7 @@ transformed parameters{
   x0[8] = 0; // E3
   params[1] = par_beta;
   params[2] = par_rho;
+  params[3] = par_gamma;
   x = ode_rk45(X_model, x0, t0, ts, params);
   delta_x_1[1] =  x[1, 5] - x0[5] + 1e-5;
   for (i in 1:n_obs-1) {
@@ -64,10 +69,12 @@ model {
   par_beta ~ lognormal(0, 1);
   par_rho ~ beta(2, 2);
   I0 ~ lognormal(0, 1);
-  y ~ poisson(delta_x_1);
+  par_gamma ~ beta(2, 2);
+  inv_phi ~ exponential(5);
+  y ~ neg_binomial_2(delta_x_1, phi);
 }
 generated quantities {
   real log_lik;
-  log_lik = poisson_lpmf(y | delta_x_1);
+  log_lik = neg_binomial_2_lpmf(y | delta_x_1, phi);
 }
 
