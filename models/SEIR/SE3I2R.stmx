@@ -22,7 +22,7 @@
 	<model>
 		<variables>
 			<stock name="S">
-				<eqn>9998</eqn>
+				<eqn>N * (1 -  xi) - I0</eqn>
 				<outflow>S_to_E</outflow>
 			</stock>
 			<flow name="S to E">
@@ -34,18 +34,18 @@
 				<outflow>E1_to_E2</outflow>
 			</stock>
 			<flow name="E1 to E2">
-				<eqn>par_sigma * E1</eqn>
+				<eqn>i * par_sigma * E1</eqn>
 			</flow>
 			<stock name="I1">
-				<eqn>1</eqn>
+				<eqn>I0</eqn>
 				<inflow>E3_to_I1</inflow>
 				<outflow>I1_to_I2</outflow>
 			</stock>
 			<flow name="I1 to I2">
-				<eqn>par_gamma * I1</eqn>
+				<eqn>j * par_gamma * I1</eqn>
 			</flow>
 			<stock name="R">
-				<eqn>0</eqn>
+				<eqn>xi * N</eqn>
 				<inflow>I2_to_R</inflow>
 			</stock>
 			<aux name="par beta">
@@ -61,19 +61,19 @@
 				<eqn>10000</eqn>
 			</aux>
 			<stock name="C">
-				<eqn>0</eqn>
+				<eqn>I0</eqn>
 				<inflow>C_in</inflow>
 			</stock>
 			<flow name="C in">
-				<eqn>rho * E3_to_I1</eqn>
+				<eqn>par_rho * E3_to_I1</eqn>
 			</flow>
 			<stock name="I2">
-				<eqn>1</eqn>
+				<eqn>0</eqn>
 				<inflow>I1_to_I2</inflow>
 				<outflow>I2_to_R</outflow>
 			</stock>
 			<flow name="I2 to R">
-				<eqn>par_gamma * I2</eqn>
+				<eqn>j * par_gamma * I2</eqn>
 			</flow>
 			<stock name="E2">
 				<eqn>0</eqn>
@@ -81,7 +81,7 @@
 				<outflow>E2_to_E3</outflow>
 			</stock>
 			<flow name="E2 to E3">
-				<eqn>par_sigma * E2</eqn>
+				<eqn>i * par_sigma * E2</eqn>
 			</flow>
 			<stock name="E3">
 				<eqn>0</eqn>
@@ -89,10 +89,22 @@
 				<outflow>E3_to_I1</outflow>
 			</stock>
 			<flow name="E3 to I1">
-				<eqn>par_sigma * E3</eqn>
+				<eqn>i * par_sigma * E3</eqn>
 			</flow>
-			<aux name="rho">
+			<aux name="par rho">
 				<eqn>0.75</eqn>
+			</aux>
+			<aux name="I0">
+				<eqn>1</eqn>
+			</aux>
+			<aux name="j">
+				<eqn>2</eqn>
+			</aux>
+			<aux name="i">
+				<eqn>3</eqn>
+			</aux>
+			<aux name="xi">
+				<eqn>0</eqn>
 			</aux>
 		</variables>
 		<views>
@@ -141,7 +153,7 @@
 				<isee:iframe color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt" border_width="thin" border_style="solid"/>
 				<isee:financial_table color="black" background="#E0E0E0" text_align="right" font_size="12pt" hide_border="false" auto_fit="true" first_column_width="250" other_column_width="100" header_font_style="normal" header_font_weight="bold" header_text_decoration="none" header_text_align="center" header_vertical_text_align="center" header_font_color="black" header_font_family="Arial" header_font_size="14pt" header_text_padding="2" header_text_border_color="black" header_text_border_width="thin" header_text_border_style="none"/>
 			</style>
-			<view isee:show_pages="false" background="white" page_width="822" page_height="575" isee:page_cols="2" isee:scroll_x="67" isee:popup_graphs_are_comparative="true" isee:enable_non_negative_highlights="false" type="stock_flow">
+			<view isee:show_pages="false" background="white" page_width="822" page_height="575" isee:page_cols="2" isee:scroll_x="662" isee:popup_graphs_are_comparative="true" isee:enable_non_negative_highlights="false" type="stock_flow">
 				<style color="black" background="white" font_style="normal" font_weight="normal" text_decoration="none" text_align="center" vertical_text_align="center" font_color="black" font_family="Arial" font_size="10pt" padding="2" border_color="black" border_width="thin" border_style="none">
 					<stock color="blue" background="white" font_color="blue" font_size="9pt" label_side="top">
 						<shape type="rectangle" width="45" height="35"/>
@@ -302,11 +314,41 @@
 					<from>E3_to_I1</from>
 					<to>C_in</to>
 				</connector>
-				<aux x="700" y="442" name="rho"/>
+				<aux x="700" y="442" name="par rho"/>
 				<connector uid="21" angle="42.2461">
-					<from>rho</from>
+					<from>par_rho</from>
 					<to>C_in</to>
 				</connector>
+				<aux x="356" y="436" name="I0"/>
+				<aux label_side="center" x="835" y="106" name="j"/>
+				<connector uid="22" angle="251.565">
+					<from>j</from>
+					<to>I1_to_I2</to>
+				</connector>
+				<connector uid="23" angle="244.722">
+					<from>
+						<alias uid="24"/>
+					</from>
+					<to>I2_to_R</to>
+				</connector>
+				<aux x="332" y="231" name="i"/>
+				<connector uid="25" angle="45">
+					<from>i</from>
+					<to>E1_to_E2</to>
+				</connector>
+				<connector uid="27" angle="233.673">
+					<from>
+						<alias uid="26"/>
+					</from>
+					<to>E2_to_E3</to>
+				</connector>
+				<connector uid="28" angle="306.87">
+					<from>
+						<alias uid="29"/>
+					</from>
+					<to>E3_to_I1</to>
+				</connector>
+				<aux x="535" y="489" name="xi"/>
 				<alias font_style="italic" uid="11" x="968.5" y="231" width="18" height="18">
 					<of>par_gamma</of>
 				</alias>
@@ -315,6 +357,17 @@
 				</alias>
 				<alias font_style="italic" uid="17" x="630.5" y="222" width="18" height="18">
 					<of>par_sigma</of>
+				</alias>
+				<alias font_style="italic" label_side="center" uid="24" x="998" y="103" width="18" height="18">
+					<of>j</of>
+				</alias>
+				<alias color="blue" background="white" font_style="italic" uid="26" x="536.875" y="117" width="8.25" height="14">
+					<shape type="name_only"/>
+					<of>i</of>
+				</alias>
+				<alias color="blue" background="white" font_style="italic" uid="29" x="622.875" y="114" width="8.25" height="14">
+					<shape type="name_only"/>
+					<of>i</of>
 				</alias>
 			</view>
 		</views>
