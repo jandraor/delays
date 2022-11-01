@@ -1,489 +1,1157 @@
 ---
-title: "S6 - LFO-CV Case 1"
+title: "S6"
 output: 
   html_document:
     toc: true
+    toc_float:
+      smooth_scroll: FALSE
+    number_sections: true
 ---
-
-
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 
 library(cmdstanr)
-library(furrr)
 library(dplyr)
-library(readr)
-library(progressr)
 library(purrr)
-library(rstan)
+library(readr)
+library(readsdr)
+library(stringr)
 library(tictoc)
 library(tidyr)
-library(stringr)
 
-source("./R_scripts/ELDP.R")
+source("./R_scripts/Inference.R")
+source("./R_scripts/formulas.R")
 source("./R_scripts/model_selection.R")
-source("./R_scripts/LFO_CV.R")
-source("./R_scripts/log_funs.R")
 source("./R_scripts/plots.R")
-source("./R_scripts/utils.R")
+source("./R_scripts/posterior_utils.R")
+source("./R_scripts/synthetic_data.R")
 source("./R_scripts/tables.R")
+source("./R_scripts/utils.R")
+```
 
-MLE_results <- read_csv("./Saved_objects/Inference/Synthetic_data/SEIR/Case_1/MLE_choice.csv")
+# Overview
+
+This appendix aims to...
+The mean generation 
+time ($\tau$) shown in the table below corresponds to that of the exponentially
+distributed infectious period, which we use as a reference. As the distribution
+of the infectious period becomes tighter, the mean generation time decreases.
+
+```{r}
+scenario_df <- data.frame(Scenario = 1:5,
+                          R0       = c(2.5, 2.5, 2.5, 9, 17),
+                          tau      = c(4, 8, 13, 4, 4))
+
+table_scenarios(scenario_df)
 ```
 
 
 ```{r}
-y_df <- read_csv("./data/Synthetic/SEIR/Case_1.csv")
+params_df <- read_csv("./data/param_values.csv", show_col_types = FALSE)
+
+# Population size
+N_val         <- params_df |> filter(name == "N") |> pull(value)
+# Reporting rate
+rho_val       <- params_df |> filter(name == "rho") |> pull(value)
+
+n_ds        <- 20
+m_val       <- 1
+n_val       <- 1:4
+inv_phi_val <- 0
+
+i_val   <- 1
+j_val   <- 1:4
+M_j     <- j_val
 ```
 
-## Latent states
-
-```{r}
-plot_ts_by_I_order(y_df)
-```
-
-
-## Measurements
-
-
-```{r}
-ggplot(y_df, aes(time, y)) +
-  geom_line(aes(group = dataset), colour = "grey75", alpha = 0.1) +
-  facet_wrap("I_order") +
-  theme_pubr()
-```
-
-# Leave-future-out cross-validation (LFO-CV)
-
-```{r} 
+```{r inferece_params}
 n_chains          <- 4
 samples_per_chain <- 1000
-n_samples         <- n_chains * samples_per_chain
-M_m               <- 1
-M_n               <- 1:4
-L_min             <- 5 # minimum number of points
 
-root_fldr <- "./Saved_objects/LFO_CV/Synthetic_data/Case_1"
+M_i        <- 1
+M_j        <- 1:4
+n_params   <- 5
 
-info_files <- readRDS("./Stan_files/SEIR/Pois/meta_info.rds")
-meas_mdl   <- "pois"
-
-global_end_points <- vector(mode = "list", length = length(M_n))
-LFO_CV_default    <- vector(mode = "list", length = length(M_n))
-LFO_CV_optim      <- vector(mode = "list", length = length(M_n))
+all_files  <- readRDS("./Stan_files/Inference/Three_params_alt/pois/meta_info.rds")
+fltr       <- map_lgl(all_files, \(fl_list) fl_list$E_ord == M_i)
+info_files <- all_files[fltr]
 ```
 
-## First-order data
+# Scenario 1
+
+Scenario 1 corresponds to the results presented in S3.
+
+# Scenario 2
+
+## Synthetic data
 
 ```{r}
-D_m      <- 1
-D_n      <- 1
-n_data   <- 20
+inv_sigma_val <- 3
+inv_gamma_val <- 5 # Medium
+beta_val      <- 0.5 # R0 2.5
+R0_val        <- beta_val * inv_gamma_val
+ts_val        <- 100
 
-create_backup_fldrs(D_m, D_n, n_data, M_m, M_n, root_fldr)
-```
 
-```{r}
-all_fits <- CV_datasets(n_data, y_df, D_n, M_n, L_min, n_chains, 
-                        samples_per_chain, root_fldr, meas_mdl)
-```
+set.seed(1600)
 
-
-```{r}
-L_max    <- 57
-fp       <- str_glue("{root_fldr}/D{D_m}{D_n}/L_analysis_all.csv")
-L_df     <- evaluate_L(n_data, y_df, D_n, M_n, all_fits, L_min, L_max, 
-                       meas_mdl, fp)
-```
-
-```{r}
- plot_error_by_L(L_df)
-```
-
-```{r}
- plot_min_error(L_df, 0, "sqr_error")
-```
-
-```{r}
-error_df <- L_df |> filter(error <= min(error) + 0) |> 
-  mutate(range = L_max - L_min) |> arrange(desc(range))
-
-bounds <- error_df |> slice(1) |> select(L_min, L_max) |> as.numeric()
-
-global_end_points[[D_n]] <- bounds
-
-print(error_df)
-```
-
-```{r}
-ELDP_default          <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, L_min, 
-                                     L_min, meas_mdl, L_max, D_n) 
-LFO_CV_default[[D_n]] <- ELDP_default
-
-ELDP_best           <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, 
-                                   bounds[[1]], L_min, meas_mdl, 
-                                   bounds[[2]], D_n)
-LFO_CV_optim[[D_n]] <- ELDP_best
-```
-
-```{r, message = FALSE}
-plot_prediction_comparison(ELDP_default, ELDP_best, MLE_results, D_n)
-```
-
-### Stepwise choice
-
-```{r}
-M_n_list <- c(1:2)
-fp       <- str_glue("{root_fldr}/D1{D_n}/L_analysis_1_2.csv")
-
-L_df     <- evaluate_L(n_data, y_df, D_n, M_n_list, all_fits, L_min, L_max, 
-                       meas_mdl, fp)
-```
-
-```{r}
-plot_error_by_L(L_df)
-```
-
-```{r}
-plot_CV_boundary(y_df, D_n, 5, 31)
-```
-
-
-```{r}
-ELDP_df <- ELDP_choice(n_data, y_df, D_n, M_n_list, all_fits, 20, L_min, 
-                       meas_mdl, 43, D_n)
-
-data.frame(D_n = D_n, 
-           n_sucesses = sum(ELDP_df$is_correct), 
-           error      = sum(ELDP_df$error),
-           sqrt_error = sum(ELDP_df$sqrt_error))
-```
-
-```{r}
-ELDP_df <- ELDP_choice(n_data, y_df, D_n, M_n_list, all_fits, 26, L_min, 
-                       meas_mdl, 35, D_n)
-
-data.frame(D_n = D_n, 
-           n_sucesses = sum(ELDP_df$is_correct), 
-           error      = sum(ELDP_df$error),
-           sqrt_error = sum(ELDP_df$sqrt_error))
-```
-
-
-## Second-order data
-
-```{r}
-D_m      <- 1
-D_n      <- 2
-n_data   <- 20
-
-create_backup_fldrs(D_m, D_n, n_data, M_m, M_n, root_fldr)
-```
-
-```{r}
-all_fits <- CV_datasets(n_data, y_df, D_n, M_n, L_min, n_chains, 
-                        samples_per_chain, root_fldr, meas_mdl)
-```
-
-```{r}
-L_max    <- 54
-fp       <- str_glue("{root_fldr}/D{D_m}{D_n}/L_analysis_all.csv")
-L_df     <- evaluate_L(n_data, y_df, D_n, M_n, all_fits, L_min, L_max, 
-                       meas_mdl, fp)
-```
-
-
-```{r}
-plot_error_by_L(L_df)
-```
-
-```{r}
-plot_min_error(L_df, 0, "sqr_error")
-```
-
-```{r}
-error_df <- L_df |> filter(error <= min(error) + 0) |> 
-  mutate(range = L_max - L_min) |> arrange(desc(range))
-
-bounds <- error_df |> slice(1) |> select(L_min, L_max) |> as.numeric()
-
-global_end_points[[D_n]] <- bounds
-
-print(error_df)
-```
-
-
-```{r}
-ELDP_default <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, L_min, L_min, 
-                            meas_mdl, L_max, D_n) 
-
-ELDP_best    <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits,   bounds[[1]], 
-                            L_min, meas_mdl, bounds[[2]],  D_n)
-
-LFO_CV_default[[D_n]] <- ELDP_default
-LFO_CV_optim[[D_n]]   <- ELDP_best
-```
-
-```{r, message = FALSE}
-plot_prediction_comparison(ELDP_default, ELDP_best, MLE_results, D_n)
-```
-
-## Stepwise selection
-
-```{r}
-M_n_list <- c(1:2)
-fp       <- str_glue("{root_fldr}/D1{D_n}/L_analysis_1_2.csv")
-L_df     <- evaluate_L(n_data, y_df, D_n, M_n_list, all_fits, L_min, L_max, 
-                       meas_mdl, fp)
-```
-
-```{r}
-plot_error_by_L(L_df)
-```
-
-```{r}
-plot_CV_boundary(y_df, D_n, 5, 15)
-```
-
-```{r}
-ELDP_df <- ELDP_choice(n_data, y_df, D_n, M_n_list, all_fits, 20, L_min, 
-                       meas_mdl, 46, D_n)
-
-data.frame(D_n = D_n, 
-           n_sucesses = sum(ELDP_df$is_correct), 
-           error      = sum(ELDP_df$error),
-           sqrt_error = sum(ELDP_df$sqrt_error))
-```
-
-```{r}
-ELDP_df <- ELDP_choice(n_data, y_df, D_n, M_n_list, all_fits, 27, L_min, 
-                       meas_mdl, L_max, D_n)
-
-data.frame(D_n = D_n, 
-           n_sucesses = sum(ELDP_df$is_correct), 
-           error      = sum(ELDP_df$error),
-           sqrt_error = sum(ELDP_df$sqrt_error))
-```
-
-## Third-order data
-
-```{r}
-D_m      <- 1
-D_n      <- 3
-n_data   <- 20
-
-create_backup_fldrs(D_m, D_n, n_data, M_m, M_n, root_fldr)
-```
-
-```{r all_fit_3}
-all_fits <- CV_datasets(n_data, y_df, D_n, M_n, L_min, n_chains, 
-                        samples_per_chain, root_fldr, meas_mdl)
-```
-
-```{r}
-L_max    <- 50
-fp       <- str_glue("{root_fldr}/D1{D_n}/L_analysis_all.csv")
-L_df     <- evaluate_L(n_data, y_df, D_n, M_n, all_fits, L_min, L_max, 
-                       meas_mdl, fp)
-```
-
-```{r}
-plot_error_by_L(L_df)
-```
-
-
-```{r}
-plot_min_error(L_df, 0, "sqr_error")
-```
-
-```{r}
-error_df <- L_df |> filter(error <= min(error) + 0) |> 
-  mutate(range = L_max - L_min) |> arrange(desc(range))
-
-bounds <- error_df |> slice(1) |> select(L_min, L_max) |> as.numeric()
-
-global_end_points[[D_n]] <- bounds
-
-print(error_df)
-```
-
-```{r}
-ELDP_default <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, L_min, 
-                                     L_min, meas_mdl, L_max, D_n) 
-
-ELDP_best    <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, bounds[[1]], 
-                            L_min, meas_mdl, bounds[[2]], D_n)
-
-LFO_CV_default[[D_n]] <- ELDP_default
-LFO_CV_optim[[D_n]]   <- ELDP_best
-```
-
-```{r, message = FALSE}
-plot_prediction_comparison(ELDP_default, ELDP_best, MLE_results, D_n)
-```
-
-```{r}
-M_n_list <- c(1:2)
-D_n_star <- 2
-fp       <- str_glue("{root_fldr}/D1{D_n}/L_analysis_1_2.csv")
-L_df     <- evaluate_L(n_data, y_df, D_n, M_n_list, all_fits, L_min, L_max, 
-                       meas_mdl, fp, D_n_star)
-```
-
-```{r}
-plot_error_by_L(L_df)
-```
-
-```{r}
-plot_min_error(L_df, 3)
-```
-
-```{r}
-L_df |> filter(error <= min(error) + 2) |> mutate(range = L_max - L_min) |> arrange(desc(range))
-```
-
-```{r}
-ELDP_df <- ELDP_choice(n_data, y_df, D_n, M_n_list, all_fits, 24, L_min, 
-                       meas_mdl, 50, D_n_star)
-
-data.frame(D_n = D_n, 
-           n_sucesses = sum(ELDP_df$is_correct), 
-           error      = sum(ELDP_df$error),
-           sqrt_error = sum(ELDP_df$sqrt_error))
-```
-
-## Fourth-order data
-
-```{r}
-D_m      <- 1
-D_n      <- 4
-n_data   <- 20
-
-create_backup_fldrs(D_m, D_n, n_data, M_m, M_n, root_fldr)
-```
-
-```{r all_fit_4}
-all_fits <- CV_datasets(n_data, y_df, D_n, M_n, L_min, n_chains, 
-                        samples_per_chain, root_fldr, meas_mdl)
-```
-
-```{r}
-L_max    <- 49
-fp       <- str_glue("{root_fldr}/D1{D_n}/L_analysis_all.csv")
-L_df  <- evaluate_L(n_data, y_df, D_n, M_n, all_fits, L_min, L_max, 
-                    meas_mdl, fp)
-```
-
-```{r}
-plot_error_by_L(L_df)
-```
-
-```{r}
-plot_min_error(L_df, 1, "sqr_error")
-```
-
-```{r}
-error_df <- L_df |> filter(error <= min(error) + 1) |> 
-  mutate(range = L_max - L_min) |> arrange(desc(range))
-
-bounds <- error_df |> slice(1) |> select(L_min, L_max) |> as.numeric()
-
-global_end_points[[D_n]] <- bounds
-
-print(error_df)
-```
-
-
-```{r}
-ELDP_default <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, L_min, L_min, 
-                            meas_mdl, L_max, D_n) 
-
-ELDP_best    <- ELDP_choice(n_data, y_df, D_n, M_n, all_fits, bounds[[1]], 
-                            L_min, meas_mdl, bounds[[2]], D_n)
-
-LFO_CV_default[[D_n]] <- ELDP_default
-LFO_CV_optim[[D_n]]   <- ELDP_best
-```
-
-```{r, message = FALSE}
-plot_prediction_comparison(ELDP_default, ELDP_best, MLE_results, D_n)
-```
-
-```{r}
-M_n_list <- c(1:2)
-D_n_star <- 2
-fp       <- str_glue("{root_fldr}/D1{D_n}/L_analysis_1_2.csv")
-L_df     <- evaluate_L(n_data, y_df, D_n, M_n_list, all_fits, L_min, L_max, 
-                       meas_mdl, fp, D_n_star)
-```
-
-```{r}
-plot_error_by_L(L_df)
-```
-
-```{r}
-plot_min_error(L_df, 1)
-```
-
-```{r}
-L_df |> filter(error <= min(error) + 1) |> mutate(range = L_max - L_min) |> arrange(desc(range))
-```
-
-```{r}
-ELDP_df <- ELDP_choice(n_data, y_df, D_n, M_n_list, all_fits, 5, L_min, 
-                       meas_mdl, 49, D_n_star)
-
-data.frame(D_n = D_n, 
-           n_sucesses = sum(ELDP_df$is_correct), 
-           error      = sum(ELDP_df$error))
-```
-
-
-# Summary
-
-```{r}
-summarise_predictions <- function(pred_list) {
+y_list <- lapply(1:n_ds, function(ds) {
   
-   df <- do.call(rbind, pred_list) |> 
-     group_by(D_n) |> 
-     summarise(sqrt_error  = sum(sqrt_error),
-               pct_success = sum(is_correct) / n())
-   
-   df
-}
-
-LFO_default_scores <- summarise_predictions(LFO_CV_default) |> 
-  mutate(window = "LFO (Default)")
-
-LFO_optim_scores <- summarise_predictions(LFO_CV_optim) |> 
-  mutate(window = "LFO (Optimum)")
-
-write_csv(LFO_optim_scores, file.path(root_fldr, "LFO_optim.csv"))
-
-MLE_score <- estimate_MLE_score(MLE_results)
-
-scores_df <- bind_rows(MLE_score, LFO_default_scores, LFO_optim_scores) |> 
-  pivot_wider(names_from = window, values_from = c(sqrt_error, pct_success))
-```
-
-```{r}
-table_comparison_scores(scores_df)
-```
-
-# Boundaries
-
-```{r, fig.height = 7}
-boundaries_df <- imap_dfr(global_end_points, \(obj, i) {
-  
-  data.frame(I_order = i,
-             ll = obj[[1]],
-             ul = obj[[2]])
+  SEIR_measured_incidence(i_val, j_val, N_val, beta_val, inv_sigma_val, 
+                          inv_gamma_val, rho_val, ts_val, inv_phi_val) |> 
+    mutate(dataset = ds)
 })
 
-write_csv(boundaries_df, file.path(root_fldr, "boundaries.csv"))
+y_df <- do.call(rbind, y_list)
 
-plot_CV_boundaries(y_df, boundaries_df)
+root_fldr  <- "./Saved_objects/Inference/Synthetic_data/Scenarios/Scenario_2"
+ll_list    <- vector(mode = "list", length = length(M_j))
+```
+
+```{r}
+syn_data_file <- "./data/Synthetic/Scenarios/Scenario_2.csv"
+
+if(!file.exists(syn_data_file)) {
+  write_csv(do.call(rbind, y_list), syn_data_file)
+}
+```
+
+```{r}
+plot_measured_incidence(y_list, "1/3")
+```
+
+## Inference
+
+### First-order data
+
+```{r}
+D_i    <- 1
+D_j    <- 1
+n_data <- 20 
+create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
+```
+
+```{r}
+ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain, 
+                               n_params = n_params, alt_param = TRUE,
+                               inv_sigma = inv_sigma_val,
+                               inv_gamma = inv_gamma_val)
+```
+
+```{r}
+ds               <- 1
+posterior_sample <- ll_list[[D_j]][[ds]]
+
+ds_subset        <- c(1, 6, 10, 14)
+posterior_subset <- ll_list[[D_j]][ds_subset]
+```
+
+```{r}
+incidence_df <- extract_incidence(posterior_sample, 40)
+plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
+```
+
+#### Joint posterior distribution
+
+```{r}
+joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
+  select(par_inv_R0, par_rho, I0)
+
+pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
+                M_j = D_j)
+```
+
+#### $\Re_0$ estimates
+
+```{r}
+plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
+```
+
+#### $I_0$ estimates
+
+```{r}
+plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
+                              x_max = 5, x_label = "I[0]", D_i, D_j)
+```
+
+### Second-order data
+
+```{r}
+D_i    <- 1
+D_j    <- 2
+n_data <- 20 
+create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
+```
+
+```{r}
+ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain, 
+                               n_params = n_params, alt_param = TRUE,
+                               inv_sigma = inv_sigma_val,
+                               inv_gamma = inv_gamma_val)
+```
+
+```{r}
+ds               <- 1
+posterior_sample <- ll_list[[D_j]][[ds]]
+
+ds_subset        <- c(1, 6, 10, 14)
+posterior_subset <- ll_list[[D_j]][ds_subset]
+```
+
+```{r}
+incidence_df <- extract_incidence(posterior_sample, 40)
+plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
+```
+
+#### Joint posterior distribution
+
+```{r}
+joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
+  select(par_inv_R0, par_rho, I0)
+
+pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
+                M_j = D_j)
+```
+
+#### $\Re_0$ estimates
+
+```{r}
+plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
+```
+
+#### $I_0$ estimates
+
+```{r}
+plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
+                              x_max = 3, x_label = "I[0]", D_i, D_j)
+```
+
+### Third-order data
+
+```{r}
+D_i    <- 1
+D_j    <- 3
+n_data <- 20 
+create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
+```
+
+```{r}
+ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain, 
+                               n_params = n_params, alt_param = TRUE,
+                               inv_sigma = inv_sigma_val,
+                               inv_gamma = inv_gamma_val)
+```
+
+```{r}
+ds               <- 1
+posterior_sample <- ll_list[[D_j]][[ds]]
+
+ds_subset        <- c(1, 6, 10, 14)
+posterior_subset <- ll_list[[D_j]][ds_subset]
+```
+
+```{r}
+incidence_df <- extract_incidence(posterior_sample, 40)
+plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
+```
+
+#### Joint posterior distribution
+
+```{r}
+joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
+  select(par_inv_R0, par_rho, I0)
+
+pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
+                M_j = D_j)
+```
+
+#### $\Re_0$ estimates
+
+```{r}
+plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
+```
+
+#### $I_0$ estimates
+
+```{r}
+plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
+                              x_max = 3, x_label = "I[0]", D_i, D_j)
+```
+
+### Fourth-order data
+
+```{r}
+D_i    <- 1
+D_j    <- 4
+n_data <- 20 
+create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
+```
+
+```{r}
+ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain, 
+                               n_params = n_params, alt_param = TRUE,
+                               inv_sigma = inv_sigma_val,
+                               inv_gamma = inv_gamma_val)
+```
+
+```{r}
+ds               <- 1
+posterior_sample <- ll_list[[D_j]][[ds]]
+
+ds_subset        <- c(1, 6, 10, 14)
+posterior_subset <- ll_list[[D_j]][ds_subset]
+```
+
+```{r}
+incidence_df <- extract_incidence(posterior_sample, 40)
+plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
+```
+
+#### Joint posterior distribution
+
+```{r}
+joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
+  select(par_inv_R0, par_rho, I0)
+
+pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
+                M_j = D_j)
+```
+
+#### $\Re_0$ estimates
+
+```{r}
+plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
+```
+
+#### $I_0$ estimates
+
+```{r}
+plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
+                              x_max = 3, x_label = "I[0]", D_i, D_j)
+```
+
+### Summary
+
+#### Coverage
+
+```{r}
+actual_values <- data.frame(par = c("R0", "par_rho", "I0"), 
+                            actual_val = c(R0_val, rho_val, 1))
+
+map_df(ll_list, calculate_coverage, actual_values, inv_gamma_val) |> 
+  pivot_wider(names_from = par, values_from = pct_right) -> coverage_df
+```
+
+```{r}
+table_coverage(coverage_df)
+```
+
+# Scenario 3
+
+## Synthetic data
+
+```{r}
+inv_sigma_val <- 8
+inv_gamma_val <- 5 # Large
+beta_val      <- 0.5 # R0 2.5
+ts_val        <- 180
+R0_val        <- beta_val * inv_gamma_val
+
+set.seed(1235)
+
+y_list <- lapply(1:n_ds, function(ds) {
+  
+  SEIR_measured_incidence(i_val, j_val, N_val, beta_val, inv_sigma_val, 
+                          inv_gamma_val, rho_val, ts_val, inv_phi_val) |> 
+    mutate(dataset = ds)
+})
+
+y_df <- do.call(rbind, y_list)
+
+root_fldr  <- "./Saved_objects/Inference/Synthetic_data/Scenarios/Scenario_3"
+ll_list    <- vector(mode = "list", length = length(M_j))
+```
+
+```{r}
+syn_data_file <- "./data/Synthetic/Scenarios/Scenario_3.csv"
+
+if(!file.exists(syn_data_file)) {
+  write_csv(do.call(rbind, y_list), syn_data_file)
+}
+```
+
+```{r}
+plot_measured_incidence(y_list, "1/3")
+```
+
+## Inference
+
+### First-order data
+
+```{r}
+D_i    <- 1
+D_j    <- 1
+n_data <- 20
+create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
+```
+
+```{r}
+ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain, 
+                               n_params = n_params, alt_param = TRUE,
+                               inv_sigma = inv_sigma_val,
+                               inv_gamma = inv_gamma_val)
+```
+
+```{r}
+ds               <- 1
+posterior_sample <- ll_list[[D_j]][[ds]]
+
+ds_subset        <- c(1, 6, 10, 14)
+posterior_subset <- ll_list[[D_j]][ds_subset]
+```
+
+```{r}
+incidence_df <- extract_incidence(posterior_sample, 40)
+plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
+```
+
+#### Joint posterior distribution
+
+```{r}
+joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
+  select(par_inv_R0, par_rho, I0)
+
+pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
+                M_j = D_j)
+```
+
+#### $\Re_0$ estimates
+
+```{r}
+plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
+```
+
+#### $I_0$ estimates
+
+```{r}
+plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
+                              x_max = 3, x_label = "I[0]", D_i, D_j)
+```
+
+### Second-order data
+
+```{r}
+D_i    <- 1
+D_j    <- 2
+n_data <- 20
+create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
+```
+
+```{r}
+ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain, 
+                               n_params = n_params, alt_param = TRUE,
+                               inv_sigma = inv_sigma_val,
+                               inv_gamma = inv_gamma_val)
+```
+
+```{r}
+ds               <- 1
+posterior_sample <- ll_list[[D_j]][[ds]]
+
+ds_subset        <- c(1, 6, 10, 14)
+posterior_subset <- ll_list[[D_j]][ds_subset]
+```
+
+```{r}
+incidence_df <- extract_incidence(posterior_sample, 40)
+plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
+```
+
+#### Joint posterior distribution
+
+```{r}
+joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
+  select(par_inv_R0, par_rho, I0)
+
+pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
+                M_j = D_j)
+```
+
+#### $\Re_0$ estimates
+
+```{r}
+plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
+```
+
+#### $I_0$ estimates
+
+```{r}
+plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
+                              x_max = 3, x_label = "I[0]", D_i, D_j)
+```
+
+### Third-order data
+
+```{r}
+D_i    <- 1
+D_j    <- 3
+n_data <- 20
+create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
+```
+
+```{r}
+ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain, 
+                               n_params = n_params, alt_param = TRUE,
+                               inv_sigma = inv_sigma_val,
+                               inv_gamma = inv_gamma_val)
+```
+
+```{r}
+ds               <- 1
+posterior_sample <- ll_list[[D_j]][[ds]]
+
+ds_subset        <- c(1, 6, 10, 14)
+posterior_subset <- ll_list[[D_j]][ds_subset]
+```
+
+```{r}
+incidence_df <- extract_incidence(posterior_sample, 40)
+plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
+```
+
+#### Joint posterior distribution
+
+```{r}
+joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
+  select(par_inv_R0, par_rho, I0)
+
+pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
+                M_j = D_j)
+```
+
+#### $\Re_0$ estimates
+
+```{r}
+plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
+```
+
+#### $I_0$ estimates
+
+```{r}
+plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
+                              x_max = 3, x_label = "I[0]", D_i, D_j)
+```
+
+### Fourth-order data
+
+```{r}
+D_i    <- 1
+D_j    <- 4
+n_data <- 20
+create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
+```
+
+```{r}
+ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain, 
+                               n_params = n_params, alt_param = TRUE,
+                               inv_sigma = inv_sigma_val,
+                               inv_gamma = inv_gamma_val)
+```
+
+```{r}
+ds               <- 1
+posterior_sample <- ll_list[[D_j]][[ds]]
+
+ds_subset        <- c(1, 6, 10, 14)
+posterior_subset <- ll_list[[D_j]][ds_subset]
+```
+
+```{r}
+incidence_df <- extract_incidence(posterior_sample, 40)
+plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
+```
+
+#### Joint posterior distribution
+
+```{r}
+joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
+  select(par_inv_R0, par_rho, I0)
+
+pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
+                M_j = D_j)
+```
+
+#### $\Re_0$ estimates
+
+```{r}
+plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
+```
+
+#### $I_0$ estimates
+
+```{r}
+plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
+                              x_max = 3, x_label = "I[0]", D_i, D_j)
+```
+
+### Summary
+
+#### Coverage
+
+```{r}
+actual_values <- data.frame(par = c("R0", "par_rho", "I0"), 
+                            actual_val = c(R0_val, rho_val, 1))
+
+map_df(ll_list, calculate_coverage, actual_values, inv_gamma_val) |> 
+  pivot_wider(names_from = par, values_from = pct_right) -> coverage_df
+```
+
+```{r}
+table_coverage(coverage_df)
+```
+
+# Scenario 4
+
+## Synthetic data
+
+```{r}
+inv_sigma_val <- 2
+inv_gamma_val <- 2 # low
+beta_val      <- 4.5 # R0 9
+ts_val        <- 30
+R0_val        <- beta_val * inv_gamma_val
+
+set.seed(18061986)
+
+y_list <- lapply(1:n_ds, function(ds) {
+  
+  SEIR_measured_incidence(i_val, j_val, N_val, beta_val, inv_sigma_val, 
+                          inv_gamma_val, rho_val, ts_val, inv_phi_val) |> 
+    mutate(dataset = ds)
+})
+
+y_df <- do.call(rbind, y_list)
+
+root_fldr  <- "./Saved_objects/Inference/Synthetic_data/Scenarios/Scenario_4"
+ll_list    <- vector(mode = "list", length = length(M_j))
+```
+
+```{r}
+syn_data_file <- "./data/Synthetic/Scenarios/Scenario_4.csv"
+
+if(!file.exists(syn_data_file)) {
+  write_csv(do.call(rbind, y_list), syn_data_file)
+}
+```
+
+```{r}
+plot_measured_incidence(y_list, "1/3")
 ```
 
 
+## Inference
+
+### First-order data
+
+```{r}
+D_i    <- 1
+D_j    <- 1
+n_data <- 20
+create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
+```
+
+```{r}
+ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain, 
+                               n_params = n_params, alt_param = TRUE,
+                               inv_sigma = inv_sigma_val,
+                               inv_gamma = inv_gamma_val)
+```
+
+```{r}
+ds               <- 1
+posterior_sample <- ll_list[[D_j]][[ds]]
+
+ds_subset        <- c(1, 6, 10, 14)
+posterior_subset <- ll_list[[D_j]][ds_subset]
+```
+
+```{r}
+incidence_df <- extract_incidence(posterior_sample, 40)
+plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
+```
+
+#### Joint posterior distribution
+
+```{r}
+joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
+  select(par_inv_R0, par_rho, I0)
+
+pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
+                M_j = D_j)
+```
+
+#### $\Re_0$ estimates
+
+```{r}
+plot_R0_comparison_by_dataset(posterior_subset, R0_val, 5, 35, D_i, D_j)
+```
+
+#### $I_0$ estimates
+
+```{r}
+plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
+                              x_max = 15, x_label = "I[0]", D_i, D_j)
+```
+
+### Second-order data
+
+```{r}
+D_i    <- 1
+D_j    <- 2
+n_data <- 20
+create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
+```
+
+```{r}
+ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain, 
+                               n_params = n_params, alt_param = TRUE,
+                               inv_sigma = inv_sigma_val,
+                               inv_gamma = inv_gamma_val)
+```
+
+```{r}
+ds               <- 1
+posterior_sample <- ll_list[[D_j]][[ds]]
+
+ds_subset        <- c(1, 6, 10, 14)
+posterior_subset <- ll_list[[D_j]][ds_subset]
+```
+
+```{r}
+incidence_df <- extract_incidence(posterior_sample, 40)
+plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
+```
+
+#### Joint posterior distribution
+
+```{r}
+joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
+  select(par_inv_R0, par_rho, I0)
+
+pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
+                M_j = D_j)
+```
+
+#### $\Re_0$ estimates
+
+```{r}
+plot_R0_comparison_by_dataset(posterior_subset, R0_val, 10, 35, D_i, D_j)
+```
+
+#### $I_0$ estimates
+
+```{r}
+plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
+                              x_max = 8, x_label = "I[0]", D_i, D_j)
+```
+
+### Third-order data
+
+```{r}
+D_i    <- 1
+D_j    <- 3
+n_data <- 20
+create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
+```
+
+```{r}
+ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain, 
+                               n_params = n_params, alt_param = TRUE,
+                               inv_sigma = inv_sigma_val,
+                               inv_gamma = inv_gamma_val)
+```
+
+```{r}
+ds               <- 1
+posterior_sample <- ll_list[[D_j]][[ds]]
+
+ds_subset        <- c(1, 6, 10, 14)
+posterior_subset <- ll_list[[D_j]][ds_subset]
+```
+
+```{r}
+incidence_df <- extract_incidence(posterior_sample, 40)
+plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
+```
+
+#### Joint posterior distribution
+
+```{r}
+joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
+  select(par_inv_R0, par_rho, I0)
+
+pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
+                M_j = D_j)
+```
+
+#### $\Re_0$ estimates
+
+```{r}
+plot_R0_comparison_by_dataset(posterior_subset, R0_val, 10, 35, D_i, D_j)
+```
+
+#### $I_0$ estimates
+
+```{r}
+plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
+                              x_max = 8, x_label = "I[0]", D_i, D_j)
+```
+
+### Fourth-order data
+
+```{r}
+D_i    <- 1
+D_j    <- 4
+n_data <- 20
+create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
+```
+
+```{r}
+ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain, 
+                               n_params = n_params, alt_param = TRUE,
+                               inv_sigma = inv_sigma_val,
+                               inv_gamma = inv_gamma_val)
+```
+
+```{r}
+ds               <- 1
+posterior_sample <- ll_list[[D_j]][[ds]]
+
+ds_subset        <- c(1, 6, 10, 14)
+posterior_subset <- ll_list[[D_j]][ds_subset]
+```
+
+```{r}
+incidence_df <- extract_incidence(posterior_sample, 40)
+plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
+```
+
+#### Joint posterior distribution
+
+```{r}
+joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
+  select(par_inv_R0, par_rho, I0)
+
+pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
+                M_j = D_j)
+```
+
+#### $\Re_0$ estimates
+
+```{r}
+plot_R0_comparison_by_dataset(posterior_subset, R0_val, 5, 35, D_i, D_j)
+```
+
+#### $I_0$ estimates
+
+```{r}
+plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
+                              x_max = 12, x_label = "I[0]", D_i, D_j)
+```
+
+### Summary
+
+#### Coverage
+
+```{r}
+actual_values <- data.frame(par = c("R0", "par_rho", "I0"), 
+                            actual_val = c(R0_val, rho_val, 1))
+
+map_df(ll_list, calculate_coverage, actual_values, inv_gamma_val) |> 
+  pivot_wider(names_from = par, values_from = pct_right) -> coverage_df
+```
+
+```{r}
+table_coverage(coverage_df)
+```
+
+# Scenario 5
+
+## Synthetic data
+
+```{r}
+inv_sigma_val <- 2
+inv_gamma_val <- 2 # low
+beta_val      <- 8.5 # R0 17
+ts_val        <- 25
+R0_val        <- beta_val * inv_gamma_val
+
+set.seed(1121)
+
+y_list <- lapply(1:n_ds, function(ds) {
+  
+  SEIR_measured_incidence(i_val, j_val, N_val, beta_val, inv_sigma_val, 
+                          inv_gamma_val, rho_val, ts_val, inv_phi_val) |> 
+    mutate(dataset = ds)
+})
+
+y_df <- do.call(rbind, y_list)
+
+root_fldr  <- "./Saved_objects/Inference/Synthetic_data/Scenarios/Scenario_5"
+ll_list    <- vector(mode = "list", length = length(M_j))
+```
+
+```{r}
+syn_data_file <- "./data/Synthetic/Scenarios/Scenario_5.csv"
+
+if(!file.exists(syn_data_file)) {
+  write_csv(do.call(rbind, y_list), syn_data_file)
+}
+```
+
+```{r}
+plot_measured_incidence(y_list, "1/3")
+```
+
+## Inference
+
+### First-order data
+
+```{r}
+D_i    <- 1
+D_j    <- 1
+n_data <- 20
+create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
+```
+
+```{r}
+ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain, 
+                               n_params = n_params, alt_param = TRUE,
+                               inv_sigma = inv_sigma_val,
+                               inv_gamma = inv_gamma_val)
+```
+
+```{r}
+ds               <- 1
+posterior_sample <- ll_list[[D_j]][[ds]]
+
+ds_subset        <- c(1, 6, 10, 14)
+posterior_subset <- ll_list[[D_j]][ds_subset]
+```
+
+```{r}
+incidence_df <- extract_incidence(posterior_sample, 40)
+plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
+```
+
+#### Joint posterior distribution
+
+```{r}
+joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
+  select(par_inv_R0, par_rho, I0)
+
+pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
+                M_j = D_j)
+```
+
+#### $\Re_0$ estimates
+
+```{r}
+plot_R0_comparison_by_dataset(posterior_subset, R0_val, 5, 35, D_i, D_j)
+```
+
+#### $I_0$ estimates
+
+```{r}
+plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
+                              x_max = 15, x_label = "I[0]", D_i, D_j)
+```
+
+### Second-order data
+
+```{r}
+D_i    <- 1
+D_j    <- 2
+n_data <- 20
+create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
+```
+
+```{r}
+ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain, 
+                               n_params = n_params, alt_param = TRUE,
+                               inv_sigma = inv_sigma_val,
+                               inv_gamma = inv_gamma_val)
+```
+
+```{r}
+ds               <- 1
+posterior_sample <- ll_list[[D_j]][[ds]]
+
+ds_subset        <- c(1, 6, 10, 14)
+posterior_subset <- ll_list[[D_j]][ds_subset]
+```
+
+```{r}
+incidence_df <- extract_incidence(posterior_sample, 40)
+plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
+```
+
+#### Joint posterior distribution
+
+```{r}
+joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
+  select(par_inv_R0, par_rho, I0)
+
+pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
+                M_j = D_j)
+```
+
+#### $\Re_0$ estimates
+
+```{r}
+plot_R0_comparison_by_dataset(posterior_subset, R0_val, 10, 35, D_i, D_j)
+```
+
+#### $I_0$ estimates
+
+```{r}
+plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
+                              x_max = 8, x_label = "I[0]", D_i, D_j)
+```
+
+### Third-order data
+
+```{r}
+D_i    <- 1
+D_j    <- 3
+n_data <- 20
+create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
+```
+
+```{r}
+ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain, 
+                               n_params = n_params, alt_param = TRUE,
+                               inv_sigma = inv_sigma_val,
+                               inv_gamma = inv_gamma_val)
+```
+
+```{r}
+ds               <- 1
+posterior_sample <- ll_list[[D_j]][[ds]]
+
+ds_subset        <- c(1, 6, 10, 14)
+posterior_subset <- ll_list[[D_j]][ds_subset]
+```
+
+```{r}
+incidence_df <- extract_incidence(posterior_sample, 40)
+plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
+```
+
+#### Joint posterior distribution
+
+```{r}
+joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
+  select(par_inv_R0, par_rho, I0)
+
+pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
+                M_j = D_j)
+```
+
+#### $\Re_0$ estimates
+
+```{r}
+plot_R0_comparison_by_dataset(posterior_subset, R0_val, 10, 35, D_i, D_j)
+```
+
+#### $I_0$ estimates
+
+```{r}
+plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
+                              x_max = 8, x_label = "I[0]", D_i, D_j)
+```
+
+### Fourth-order data
+
+```{r}
+D_i    <- 1
+D_j    <- 4
+n_data <- 20
+create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
+```
+
+```{r}
+ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
+                               root_fldr, n_chains, samples_per_chain, 
+                               n_params = n_params, alt_param = TRUE,
+                               inv_sigma = inv_sigma_val,
+                               inv_gamma = inv_gamma_val)
+```
+
+```{r}
+ds               <- 1
+posterior_sample <- ll_list[[D_j]][[ds]]
+
+ds_subset        <- 1:20#c(1, 6, 10, 14)
+posterior_subset <- ll_list[[D_j]][ds_subset]
+```
+
+```{r}
+incidence_df <- extract_incidence(posterior_sample, 40)
+plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
+```
+
+#### Joint posterior distribution
+
+```{r}
+joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
+  select(par_inv_R0, par_rho, I0)
+
+pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
+                M_j = D_j)
+```
+
+#### $\Re_0$ estimates
+
+```{r}
+plot_R0_comparison_by_dataset(posterior_subset, R0_val, 5, 35, D_i, D_j)
+```
+
+#### $I_0$ estimates
+
+```{r}
+plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
+                              x_max = 12, x_label = "I[0]", D_i, D_j)
+```
+
+### Summary
+
+### # Coverage
+
+```{r}
+actual_values <- data.frame(par = c("R0", "par_rho", "I0"), 
+                            actual_val = c(R0_val, rho_val, 1))
+
+map_df(ll_list, calculate_coverage, actual_values, inv_gamma_val) |> 
+  pivot_wider(names_from = par, values_from = pct_right) -> coverage_df
+```
+
+```{r}
+table_coverage(coverage_df)
+```
