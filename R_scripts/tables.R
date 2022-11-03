@@ -1,81 +1,92 @@
 library(gt)
 
+table_coverage <- function(df) {
+  
+  df <- relocate(df, R0, .after = M_ij)
+  
+  if("inv_phi" %in% colnames(df)) df <- relocate(df, inv_phi, 
+                                                 .after = par_rho)
+  
+  names_col <- colnames(df)
+  n_cols    <- ncol(df)
+  par_names <- names_col[3:n_cols]
+  
+  df |> gt() |> 
+    fmt_percent(
+      columns = par_names,
+      decimals = 0
+    ) |> 
+    cols_label(M_ij    = html("M<sup>ij</sup>"),
+               D_ij    = html("D<sup>ij</sup>"),
+               I0      = html("I<sub>0</sub>"),
+               R0      = html("\u211c<sub>0</sub>",),
+               par_rho = html("&rho;")) |> 
+    data_color(
+      columns = par_names,
+      colors = scales::col_numeric(
+        palette = c("#8EDACE", "#50BEAD", "#2AA996", "#216176"),
+        domain = c(0, 1)
+      )
+    ) |> 
+    tab_style(
+      cell_borders(
+        sides = c("bottom"),
+        color = "#7f7f7f",
+        weight = px(2)
+      ),
+      locations = list(
+        cells_body(
+          rows = M_ij == "14")
+    )) -> gt_table
+  
+  if("inv_gamma" %in% colnames(df)) {
+    
+    gt_table <- gt_table |> cols_label(inv_gamma = html("&gamma;<sup>-1</sup>"))
+  }
+  
+  if("inv_phi" %in% colnames(df)) {
+    
+    gt_table <- gt_table |> cols_label(inv_phi = html("&phi;<sup>-1</sup>"))
+  }
+  
+  gt_table
+}
+
 table_success <- function(df, n_data) {
   
-  df$D_n <- as.factor(df$D_n)
+  df <- df |> 
+    mutate(success       = ifelse(D_j == M_j, 1, 0),
+           success_dist  = ifelse(D_dist == M_dist, 1, 0),
+           D_j           = as.factor(D_j))
   
-  error_df <- df |> 
-    group_by(D_n) |> summarise(total_error = sum(error),
-                               total_sqr_error = sum(sqr_error))
+  summary_df <- df |> group_by(D_j) |> 
+    summarise(n_successes      = sum(success),
+              n_successes_dist = sum(success_dist),
+              .groups          = "drop") |> 
+    mutate(pct_success      = n_successes / n_data,
+           pct_success_dist = n_successes_dist / n_data)
   
-  success_df <- df |> filter(error == 0) |> 
-    count(D_n, name = "n_successes", .drop = FALSE) |> 
-    mutate(pct_success = n_successes / n_data)
-  
-  summary_df <- full_join(success_df, error_df, by = "D_n")
+
   
   summary_df |> gt() |>  
     fmt_percent(
-      columns  = pct_success,
+      columns  = c(pct_success, pct_success_dist),
       decimals = 0 
     ) |> 
     cols_label(
-      D_n              = "Dn",
+      D_j              = "Dj",
       n_successes      = "# of successes", 
+      n_successes_dist = "# of successes (dist)",
       pct_success      = "Success",
-      total_error      = "Error",
-      total_sqr_error = "Squared error")
+      pct_success_dist = "Success (dist)"
+     )
 }
-
-table_comparison_scores <- function(scores_df) {
+ 
+table_scenarios <- function(df) {
   
-  scores_df |>
-    gt() |> 
-    tab_spanner(label   = "Squared error",
-                columns = vars(`sqrt_error_LFO (Optimum)`,
-                               `sqrt_error_LFO (Default)`, 
-                               sqrt_error_MLE)) |> 
-    tab_spanner(label   = "Success",
-                columns = vars(`pct_success_LFO (Optimum)`,
-                               `pct_success_LFO (Default)`, 
-                               pct_success_MLE)) |> 
-    fmt_percent(
-      columns  = vars(pct_success_MLE, 
-                      `pct_success_LFO (Default)`,
-                      `pct_success_LFO (Optimum)`),
-      decimals = 0 
-    ) |> 
-    cols_label(
-      D_n             = html("I<sup>n</sup>"),
-      pct_success_MLE = "MLE",
-      sqrt_error_MLE  = "MLE",
-      `sqrt_error_LFO (Optimum)` = "LFO (Optimum)",
-      `pct_success_LFO (Optimum)` = "LFO (Optimum)",
-      `sqrt_error_LFO (Default)` = "LFO (Default)",
-      `pct_success_LFO (Default)` = "LFO (Default)"
-    )
-}
-
-table_optim_comparison <- function(wide_optim) {
-  
-  wide_optim |> 
-    gt() |> 
-    tab_spanner(label   = "Squared error",
-                columns = str_glue("sqrt_error_{1:4}")) |> 
-    tab_spanner(label = "Success",
-                columns = str_glue("pct_success_{1:4}")) |> 
-    fmt_percent(
-      columns  = str_glue("pct_success_{1:4}"),
-      decimals = 0) |> 
-    cols_label(
-      sqrt_error_1 = html("I<sup>1</sup>"),
-      sqrt_error_2 = html("I<sup>2</sup>"),
-      sqrt_error_3 = html("I<sup>3</sup>"),
-      sqrt_error_4 = html("I<sup>4</sup>"),
-      case         = "Case",
-      pct_success_1 = html("I<sup>1</sup>"),
-      pct_success_2 = html("I<sup>2</sup>"),
-      pct_success_3 = html("I<sup>3</sup>"),
-      pct_success_4 = html("I<sup>4</sup>"),)
+  df |> 
+    gt()  |> 
+    cols_label(R0      = html("\u211c<sub>0</sub>",),
+               tau = html("&tau;"))
   
 }

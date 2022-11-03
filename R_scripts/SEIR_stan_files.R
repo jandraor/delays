@@ -1,203 +1,94 @@
-create_SEIR_files <- function(m, n, inv_sigma, inv_gamma, N, meas_model) {
+create_SEIR_files <- function(i, j, inv_sigma, inv_gamma, N, meas_model, 
+                              stan_fldr, gamma_unk = FALSE,
+                              alt_param = FALSE) {
   
-  orders <- cross2(m, n)
+  orders <- cross2(i, j)
   
-  lapply(orders, function(ord_obj) {
-    
-    E_ord <- ord_obj[[1]]
-    I_ord <- ord_obj[[2]]
-    
-    output <- list(E_ord         = E_ord,
-                   I_ord         = I_ord,
-                   n_stocks      = NULL,
-                   stan_filepath = NULL)
-    
-    fp              <- str_glue("./models/SEIR/SE{E_ord}I{I_ord}R.stmx")
-    mdl             <- read_xmile(fp)
-    consts          <- sd_constants(mdl)
-    stocks          <- sd_stocks(mdl)
-    C_index         <- which(stocks$name == "C")    
-    output$n_stocks <- nrow(stocks)
-    ODE_fn          <- str_glue("SE{E_ord}I{I_ord}R")
-    
-    sigma_val    <- 1 / (inv_sigma /  E_ord)
-    gamma_val    <- 1 / (inv_gamma /  I_ord)
-    
-    stan_fun     <- stan_ode_function(fp, ODE_fn, pars = consts$name[c(1,5)],
-                                      const_list = list(par_sigma = sigma_val,
-                                                        par_gamma = gamma_val,
-                                                        N         = N))
-    
-    fun_exe_line <- str_glue("  o = ode_rk45({ODE_fn}, x0, t0, ts, params);") 
-    
-    stan_data   <- paste(
-      "data {",
-      "  int<lower = 1> n_obs;",
-      "  int<lower = 1> n_params;",
-      "  int<lower = 1> n_difeq;",
-      "  array[n_obs] int y;",
-      "  real t0;",
-      "  array[n_obs + 1] real ts;",
-      "}", sep = "\n")
-    
-    stan_params <- get_stan_params(meas_model)
-    
-    stan_tp1a <- paste(
-      "transformed parameters{",
-      "  array[n_obs + 1] vector[n_difeq] o; // Output from the ODE solver",
-      "  array[n_obs] real x;",
-      "  real pred;",
-      "  vector[n_difeq] x0;",
-      "  array[n_params] real params;",
-      sep = "\n")
-    
-    if(meas_model == "nbin") {
-      
-      stan_tp1a <- paste(stan_tp1a,
-                         "  real phi_inv;",
-                         "  phi_inv = 1 / phi;", sep = "\n")
-    }
-    
-    stan_tp1b <- paste(
-      str_glue(
-        "  x0[1] = {N} - {I_ord} * I0;"),
-        "  x0[2] = 0;",
-        "  x0[3] = I0;",
-        "  x0[4] = 0;",
-        "  x0[5] = 0; // This is C", 
-      sep = "\n")
-    
-    stan_tp1 <- paste(stan_tp1a, stan_tp1b, sep = "\n")
-    
-    if(I_ord > 1) {
-      indexes <- 5 + 1:(I_ord - 1)
-      additional_stocks <- str_glue("  x0[{indexes}] = I0;") |> 
-        paste(collapse = "\n")
-      
-      stan_tp1 <- paste(stan_tp1, additional_stocks, sep = "\n")
-    }
-    
-    if(E_ord > 1) {
-      
-      indexes <- 5 + I_ord - 1 + 1:(E_ord - 1)
-      
-      additional_stocks <- str_glue("  x0[{indexes}] = 0;") |> 
-        paste(collapse = "\n")
-      
-      stan_tp1 <- paste(stan_tp1, additional_stocks, sep = "\n")
-    }
-    
-    stan_tp2 <- paste(
-      "  params[1] = beta;",
-      "  params[2] = rho;",
-      fun_exe_line,
-      str_glue("  x[1] =  o[1, {C_index}]  - x0[{C_index}];"),
-      "  for (i in 1:n_obs-1) {",
-      str_glue("    x[i + 1] = o[i + 1, {C_index}] - o[i, {C_index}] + 1e-5;"),
-      "  }",
-      str_glue("  pred = o[n_obs + 1, {C_index}] - o[n_obs, {C_index}];"),
-      "}", sep = "\n")
-    
-    stan_tp <- paste(stan_tp1, stan_tp2, sep = "\n")
-    
-    stan_model <- get_stan_model(meas_model)
-    
-    stan_gc <- get_stan_gc(meas_model)
-    
-    stan_text   <- paste(stan_fun, stan_data, stan_params,
-                         stan_tp, stan_model, stan_gc, sep = "\n")
-    
-    dist  <- str_to_title(meas_model)    
-    
-    stan_fldr     <- str_glue("./Stan_files/SEIR/{dist}")
-    dir.create(stan_fldr, showWarnings = FALSE, recursive = TRUE)  
-    stan_filepath <- file.path(stan_fldr, str_glue("SE{E_ord}I{I_ord}R.stan"))
-    
-    output$stan_filepath <- stan_filepath
-    
-    create_stan_file(stan_text, stan_filepath)
-    
-    output
-  })
+  lapply(orders, SEIR_file, inv_sigma, inv_gamma, N, meas_model, stan_fldr,
+         gamma_unk, alt_param)
 }
 
-get_stan_params <- function(meas_model) {
+SEIR_file <- function(ord_obj, inv_sigma, inv_gamma,N, meas_model,
+                      stan_fldr, gamma_unk, alt_param) {
   
+  E_ord <- ord_obj[[1]]
+  I_ord <- ord_obj[[2]]
   
-  if(meas_model == "pois") {
+  sigma_val    <- 1 / inv_sigma
+  gamma_val    <- 1 / inv_gamma
+  
+  output <- list(E_ord         = E_ord,
+                 I_ord         = I_ord,
+                 x0            = NULL,
+                 n_stocks      = NULL,
+                 stan_filepath = NULL)
+  
+  fp              <- str_glue("./models/SEIR/SE{E_ord}I{I_ord}R.stmx")
+  
+  if(alt_param) fp <- str_glue("./models/SEIR/SE{E_ord}I{I_ord}R_alt.stmx")
+  
+  stock_inits     <- get_stock_inits(E_ord, I_ord, N)
+  
+  mdl             <- read_xmile(fp, stock_list = stock_inits)
+  stocks          <- sd_stocks(mdl)
+  output$x0       <- stocks$init_value
+  output$n_stocks <- nrow(stocks)
+  
+  const_list <- list(par_sigma = sigma_val,
+                     N         = N)
+  
+  if(meas_model == "pois") meas_mdl <- list("y ~ poisson(net_flow(C))")
+  
+  if(meas_model == "nbin") meas_mdl <- list("y ~ neg_binomial_2(net_flow(C), phi)")
+  
+  if(meas_model == "norm") meas_mdl <- list("y ~ normal(net_flow(C), epsilon)")
+  
+  if(!alt_param) {
     
-    sp <- paste(
-      "parameters {",
-      "  real<lower = 0>            beta;",
-      "  real<lower = 0>            I0;",
-      "  real<lower = 0, upper = 1> rho;",
-      "}", sep = "\n")
+    const_list$par_gamma <- gamma_val
+    
+    estimated_params <- list(
+      sd_prior("par_beta", "lognormal", c(0, 1)),
+      sd_prior("par_rho", "beta", c(2, 2)),
+      sd_prior("I0", "lognormal", c(0, 1), "init"))
+    
+    if(gamma_unk) {
+      gamma_prior      <- list(sd_prior("par_gamma", "beta", c(2, 2)))
+      estimated_params <- c(estimated_params, gamma_prior)
+    }
+    
+    stan_text   <- sd_Bayes(fp, meas_mdl, estimated_params, 
+                            const_list = const_list,
+                            data_params = "N",
+                            data_inits  = "xi")
   }
   
-  if(meas_model == "nbin") {
+  if(alt_param) {
     
-    sp <- paste(
-      "parameters {",
-      "  real<lower = 0> beta;",
-      "  real<lower = 0> I0;",
-      "  real<lower = 0, upper = 1> rho;",
-      "  real<lower = 0> phi;",
-      "}", sep = "\n")
+    estimated_params <- list(sd_prior("par_inv_R0", "beta", c(2, 2)),
+                             sd_prior("par_rho", "beta", c(2,2)),
+                             sd_prior("I0", "lognormal", c(0,1), "init"))
+    
+    if(meas_model == "norm") {
+      estimated_params <- c(estimated_params, 
+                            list(sd_prior("epsilon", "exponential",
+                                          0.2, "meas_par")))
+    }
+    
+    stan_text   <- sd_Bayes(fp, meas_mdl, estimated_params, 
+                            const_list = const_list, 
+                            data_params = c("N", "par_tau", "par_sigma"),
+                            data_inits  = "xi")
   }
+
+  stan_fldr     <- file.path(stan_fldr, meas_model)
+  dir.create(stan_fldr, showWarnings = FALSE, recursive = TRUE)  
+  stan_filepath <- file.path(stan_fldr, str_glue("SE{E_ord}I{I_ord}R.stan"))
   
-  sp
+  output$stan_filepath <- stan_filepath
+  
+  create_stan_file(stan_text, stan_filepath)
+  
+  output
 }
 
-get_stan_model <- function(meas_model) {
-  
-  if(meas_model == "pois") {
-    
-    sm <- paste(
-      "model {",
-      "  beta  ~ lognormal(0, 1);",
-      "  rho   ~ beta(2, 2);",
-      "  I0    ~ lognormal(0, 1);",
-      "  y     ~ poisson(x);", 
-      "}",
-      sep = "\n")
-  }
-  
-  if(meas_model == "nbin") {
-    
-    sm <- paste(
-      "model {",
-      "  beta  ~ lognormal(0, 1);",
-      "  rho   ~ beta(2, 2);",
-      "  I0    ~ lognormal(0, 1);",
-      "  phi   ~ exponential(5);",
-      "  y     ~ neg_binomial_2(x, phi_inv);",
-      "}",
-      sep = "\n")
-  }
-  
-  sm
-}
-
-get_stan_gc <- function(meas_model) {
-  
-  if(meas_model == "pois") {
-    
-    sgc <- paste(
-      "generated quantities {",
-      "  real log_lik;",
-      "  log_lik = poisson_lpmf(y | x);",
-      "}",
-      sep = "\n")
-  }
-  
-  if(meas_model == "nbin") {
-    
-    sgc <- paste(
-      "generated quantities {",
-      "  real log_lik;",
-      "  log_lik = neg_binomial_2_lpmf(y | x, phi_inv);",
-      "}", sep = "\n")
-  }
-  
-  sgc
-}
