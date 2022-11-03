@@ -1,12 +1,15 @@
 ---
 title: "S1"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_float:
+      smooth_scroll: FALSE
+    number_sections: true
 ---
 
-Data generation
-
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE)
 
 library(cmdstanr)
 library(dplyr)
@@ -26,23 +29,51 @@ source("./R_scripts/SEIR_stan_files.R")
 source("./R_scripts/synthetic_data.R")
 source("./R_scripts/tables.R")
 source("./R_scripts/utils.R")
+source("./R_scripts/utils_model.R")
 ```
 
 # Synthetic data
 
 ```{r params1}
-N_val         <- 1e4 # Population size
-inv_sigma_val <- 2
-inv_gamma_val <- 2 # infectious period
-beta_val      <- 1.25
+params_df <- read_csv("./data/param_values.csv", show_col_types = FALSE)
+
+# Population size
+N_val         <- params_df |> filter(name == "N") |> pull(value)
+# Latent period
+inv_sigma_val <- params_df |> filter(name == "inv_sigma") |> pull(value)
+# Infectious period
+inv_gamma_val <- params_df |> filter(name == "inv_gamma") |> pull(value)
+# Effective contact rate
+beta_val      <- params_df |> filter(name == "beta") |> pull(value)
+# Reporting rate
+rho_val       <- params_df |> filter(name == "rho") |> pull(value)
+
 R0_val        <- beta_val * inv_gamma_val
-rho_val       <- 0.75
 n_ds          <- 20
 
 m_val   <- 1
 n_val   <- 1:4
 ts_val  <- 60
 ```
+
+## System (latent) model 
+
+```{r}
+i_list <- list(1, 3)
+j_list <- list(1:4, 1:4)
+
+map2_dfr(i_list, j_list, function(i, j) {
+  SEIR_actual_incidence(i, j, N_val, beta_val, inv_sigma_val, inv_gamma_val, 
+                        rho_val, ts_val)
+}) -> latent_df
+```
+
+```{r}
+plot_latent_incidence(latent_df)
+
+ggsave("./plots/Fig_01_Latent_states.pdf", height = 5, width = 5)
+```
+
 
 ## Case 1
 
@@ -53,7 +84,7 @@ set.seed(1642)
 y_list <- lapply(1:n_ds, function(i) {
   
   SEIR_measured_incidence(m_val, n_val, N_val, beta_val, inv_sigma_val, 
-                          inv_gamma_val, rho_val, ts_val,phi_val) |> 
+                          inv_gamma_val, rho_val, ts_val, phi_val) |> 
     mutate(dataset = i)
 })
 ```
@@ -63,12 +94,16 @@ plot_incidence(y_list, "Poisson")
 ```
 
 
+
 ```{r}
 syn_data_file <- "./data/Synthetic/SEIR/Case_1.csv"
 
 if(!file.exists(syn_data_file)) {
   write_csv(do.call(rbind, y_list), syn_data_file)
 }
+
+case_1_df <- do.call(rbind, y_list) |> 
+  mutate(disp = "phi^-1 ~'= 0'")
 ```
 
 ## Case 2
@@ -89,28 +124,43 @@ y_list <- lapply(1:n_ds, function(i) {
 plot_incidence(y_list, "Negative Binomial")
 ```
 
+
+
 ```{r}
 syn_data_file <- "./data/Synthetic/SEIR/Case_2.csv"
 
 if(!file.exists(syn_data_file)) {
   write_csv(do.call(rbind, y_list), syn_data_file)
 }
+
+case_2_df <- do.call(rbind, y_list) |> 
+  mutate(disp = "phi^-1 ~'= 1/3'")
 ```
+
+```{r}
+meas_df <- bind_rows(case_1_df, case_2_df) |> 
+  mutate(highlight = ifelse(dataset == 1, TRUE, FALSE))
+
+g <- plot_meas_incidence_by_overdispersion(meas_df)
+
+ggsave("./plots/Fig_02_Measurements.pdf", plot = g, height = 5, width = 5)
+```
+
 
 ## Case 3
 
 ```{r}
-m_val <- 3
-n_val <- 1:4
+i_val   <- 3
+j_val   <- 1:4
 phi_val <- 0 # Poisson
 
 set.seed(1653)
 
-y_list <- lapply(1:n_ds, function(i) {
+y_list <- lapply(1:n_ds, function(ds) {
   
-  SEIR_measured_incidence(m_val, n_val, N_val, beta_val, inv_sigma_val, 
-                          inv_gamma_val, rho_val, ts_val,phi_val) |> 
-    mutate(dataset = i)
+  SEIR_measured_incidence(i_val, j_val, N_val, beta_val, inv_sigma_val, 
+                          inv_gamma_val, rho_val, ts_val, phi_val) |> 
+    mutate(dataset = ds)
 })
 ```
 
@@ -131,17 +181,17 @@ if(!file.exists(syn_data_file)) {
 
 ```{r}
 phi_val <- 1/3
-m_val   <- 3
-n_val   <- 1:4
+i_val   <- 3
+j_val   <- 1:4
 
 
 set.seed(1928)
 
-y_list <- lapply(1:n_ds, function(i) {
+y_list <- lapply(1:n_ds, function(ds) {
   
-  SEIR_measured_incidence(m_val, n_val, N_val, beta_val, inv_sigma_val, 
-                          inv_gamma_val, rho_val, ts_val,phi_val) |> 
-    mutate(dataset = i)
+  SEIR_measured_incidence(i_val, j_val, N_val, beta_val, inv_sigma_val, 
+                          inv_gamma_val, rho_val, ts_val, phi_val) |> 
+    mutate(dataset = ds)
 })
 ```
 
@@ -164,30 +214,117 @@ if(!file.exists(syn_data_file)) {
 
 
 ```{r}
-m_list <- list(1, 3)
-n_list <- list(1:9, 1:4)
+meas_mdl <- "pois"
 
-info_files <- map2(m_list, n_list, \(m, n) {
+i_list <- list(1, 3)
+j_list <- list(1:4, 1:4)
+
+stan_fldr <- "./Stan_files/Inference/Three_params/"
+
+info_files <- map2(i_list, j_list, \(M_i, M_j) {
   
-  info_files <- create_SEIR_files(m, n, inv_sigma_val, inv_gamma_val, N_val, 
-                                "pois")
+  info_files <- create_SEIR_files(M_i, M_j, inv_sigma_val, inv_gamma_val, N_val, 
+                                "pois", stan_fldr)
 }) |> unlist(recursive = FALSE)
 
-saveRDS(info_files, "./Stan_files/SEIR/Pois/meta_info.rds")
+saveRDS(info_files, "./Stan_files/Inference/Three_params/pois/meta_info.rds")
+#-------------------------------------------------------------------------------
+i_list   <- list(1)
+j_list   <- list(1:4)
+stan_fldr <- "./Stan_files/Inference/Four_params"
+
+info_files <- map2(i_list, j_list, \(M_i, M_j) {
+  
+  info_files <- create_SEIR_files(M_i, M_j, inv_sigma_val, inv_gamma_val, N_val, 
+                                "pois", stan_fldr, gamma_unk = TRUE)
+}) |> unlist(recursive = FALSE)
+
+saveRDS(info_files, "./Stan_files/Inference/Four_params/pois/meta_info.rds")
+#-------------------------------------------------------------------------------
+stan_fldr <- "./Stan_files/Inference/Three_params_alt"
+i_list   <- list(1)
+j_list   <- list(1:4)
+
+info_files <- map2(i_list, j_list, \(M_i, M_j) {
+  
+  info_files <- create_SEIR_files(M_i, M_j, inv_sigma_val, inv_gamma_val, N_val, 
+                                meas_mdl, stan_fldr, gamma_unk = FALSE,
+                                alt_param = TRUE)
+}) |> unlist(recursive = FALSE)
+
+saveRDS(info_files, 
+        str_glue("{stan_fldr}/{meas_mdl}/meta_info.rds"))
+#-------------------------------------------------------------------------------
 ```
 
 
 ## Negative binomial
 
 ```{r}
-m_list <- list(1, 3)
-n_list <- list(1:9, 1:4)
+meas_mdl <- "nbin"
 
-info_files <- map2(m_list, n_list, \(m, n) {
+i_list <- list(1, 3)
+j_list <- list(1:4, 1:4)
+
+stan_fldr <- "./Stan_files/Inference/Three_params"
+
+info_files <- map2(i_list, j_list, \(M_i, M_j) {
   
-  create_SEIR_files(m, n, inv_sigma_val, inv_gamma_val, N_val, "nbin")
+  create_SEIR_files(M_i, M_j, inv_sigma_val, inv_gamma_val, N_val, meas_mdl,
+                    stan_fldr)
   
 }) |> unlist(recursive = FALSE)
 
-saveRDS(info_files, "./Stan_files/SEIR/Nbin/meta_info.rds")
+saveRDS(info_files, "./Stan_files/Inference/Three_params/nbin/meta_info.rds")
+#-------------------------------------------------------------------------------
+i_list <- list(1)
+j_list <- list(1:4)
+stan_fldr <- "./Stan_files/Inference/Four_params"
+
+info_files <- map2(i_list, j_list, \(M_i, M_j) {
+  
+  info_files <- create_SEIR_files(M_i, M_j, inv_sigma_val, inv_gamma_val, N_val, 
+                                meas_mdl, stan_fldr, gamma_unk = TRUE)
+  
+}) |> unlist(recursive = FALSE)
+
+saveRDS(info_files, 
+        str_glue("./Stan_files/Inference/Four_params/{meas_mdl}/meta_info.rds"))
+#-------------------------------------------------------------------------------
+i_list <- list(1)
+j_list <- list(1:4)
+stan_fldr <- "./Stan_files/Inference/Three_params_alt"
+
+info_files <- map2(i_list, j_list, \(M_i, M_j) {
+  
+  info_files <- create_SEIR_files(M_i, M_j, inv_sigma_val, inv_gamma_val, N_val, 
+                                meas_mdl, stan_fldr, gamma_unk = FALSE,
+                                alt_param = TRUE)
+}) |> unlist(recursive = FALSE)
+
+saveRDS(info_files, 
+        str_glue("{stan_fldr}/{meas_mdl}/meta_info.rds"))
+#-------------------------------------------------------------------------------
 ```
+
+## Normal measurement model
+
+```{r}
+meas_mdl <- "norm"
+i_list   <- list(1)
+j_list   <- list(1:4)
+
+info_files <- map2(i_list, j_list, \(M_i, M_j) {
+  
+  info_files <- create_SEIR_files(M_i, M_j, inv_sigma_val, inv_gamma_val, N_val, 
+                                meas_mdl, stan_fldr, gamma_unk = FALSE,
+                                alt_param = TRUE)
+}) |> unlist(recursive = FALSE)
+
+saveRDS(info_files, 
+        str_glue("{stan_fldr}/{meas_mdl}/meta_info.rds"))
+```
+
+
+
+
