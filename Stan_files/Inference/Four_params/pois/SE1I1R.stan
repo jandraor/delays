@@ -5,7 +5,7 @@ functions {
     real E1_to_I1;
     real I_to_R;
     real C_in;
-    S_to_E = params[1]*y[1]*y[3]/10000;
+    S_to_E = params[1]*y[1]*y[3]/params[4];
     E1_to_I1 = 0.5*y[2];
     I_to_R = 1*params[3]*y[3];
     C_in = params[2]*E1_to_I1;
@@ -24,6 +24,8 @@ data {
   array[n_obs] int y;
   real t0;
   array[n_obs] real ts;
+  real N;
+  real xi;
 }
 parameters {
   real<lower = 0> par_beta;
@@ -36,14 +38,15 @@ transformed parameters{
   array[n_params] real params;
   vector[n_difeq] x0; // init values
   array[n_obs] real delta_x_1;
-  x0[1] = (10000) - I0; // S
+  x0[1] = N * (1 -  xi) - I0; // S
   x0[2] = 0; // E1
   x0[3] = I0; // I1
-  x0[4] = 0; // R
+  x0[4] = xi * N; // R
   x0[5] = I0; // C
   params[1] = par_beta;
   params[2] = par_rho;
   params[3] = par_gamma;
+  params[4] = N;
   x = ode_rk45(X_model, x0, t0, ts, params);
   delta_x_1[1] =  x[1, 5] - x0[5] + 1e-5;
   for (i in 1:n_obs-1) {
