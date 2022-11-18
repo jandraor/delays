@@ -45,7 +45,7 @@ SEIR_file <- function(ord_obj, inv_sigma, inv_gamma,N, meas_model,
   
   if(!alt_param) {
     
-    const_list$par_gamma <- gamma_val
+    data_params <- c("N", "par_sigma", "par_gamma")
     
     estimated_params <- list(
       sd_prior("par_beta", "lognormal", c(0, 1)),
@@ -53,13 +53,15 @@ SEIR_file <- function(ord_obj, inv_sigma, inv_gamma,N, meas_model,
       sd_prior("I0", "lognormal", c(0, 1), "init"))
     
     if(gamma_unk) {
+      
+      data_params      <- data_params[1:2]      
       gamma_prior      <- list(sd_prior("par_gamma", "beta", c(2, 2)))
       estimated_params <- c(estimated_params, gamma_prior)
     }
     
     stan_text   <- sd_Bayes(fp, meas_mdl, estimated_params, 
-                            const_list = const_list,
-                            data_params = "N",
+                            const_list  = const_list,
+                            data_params = data_params,
                             data_inits  = "xi")
   }
   

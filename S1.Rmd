@@ -32,7 +32,14 @@ source("./R_scripts/utils.R")
 source("./R_scripts/utils_model.R")
 ```
 
-# Synthetic data
+This electronic supplementary material aims to document in a reproducible manner
+the generation of the *instruments* employed to carry out the inference study
+presented in the main text. By instruments, we refer to the synthetic incidence
+reports and the models used to fit them. Both instruments are the product of a 
+common data generating process.
+
+
+# Synthetic incidence
 
 ```{r params1}
 params_df <- read_csv("./data/param_values.csv", show_col_types = FALSE)
@@ -56,7 +63,53 @@ n_val   <- 1:4
 ts_val  <- 60
 ```
 
-## System (latent) model 
+## System (latent) component
+
+The first step for generating synthetic data consists of simulating each of 
+the instances from the $SE^iI^jR$ framework. As mentioned in the main text, we 
+restrict the number of instances to eight. Two parameterisations for the latent 
+period, $i =\{1,3\}$, and four parameterisations, $j =\{1,2,3,4\}$, for the 
+infectious period. Moreover, these instances are configured to plausible 
+parameter values and initial conditions.
+
+### Parameter values
+
+Irrespective of the distribution of the latent or the infectious period, all
+of the instances are configured to the values below. Notice that the choice of 
+these values implies that all instances share an identical $\Re_0$ value (2.5).
+
+<br>
+
+```{r}
+par_df <- data.frame(Parameter = c('$$\\beta$$', "$$\\sigma$$", "$$\\gamma$$", "$$\\rho$$", "$$N$$"),
+                     Value     = c(beta_val, 1/inv_sigma_val, 1/inv_gamma_val, rho_val, N_val))
+
+table_parameters(par_df)
+```
+
+### Initial conditions
+
+Regarding the initial conditions of the eight instances, all states set to zero
+except for the number of susceptible individuals ($S$) and infectious 
+individuals in the first stage ($I^1$).
+
+<br>
+
+```{r}
+inits_df <- data.frame(State = c("$$S$$", "$$I^1$$"),
+                       init  = c(N_val - 1, 1))
+
+table_inits(inits_df)
+```
+
+
+### Latent incidence
+
+By latent incidence, we mean the *smooth* incidence predicted by an ODE model. 
+The plot below shows the latent incidence predicted by the eight instances of 
+the $SE^iI^jR$ framework.
+
+<br>
 
 ```{r}
 i_list <- list(1, 3)
@@ -74,8 +127,16 @@ plot_latent_incidence(latent_df)
 ggsave("./plots/Fig_01_Latent_states.pdf", height = 5, width = 5)
 ```
 
+## Observational component
 
-## Case 1
+Subsequently, for each latent incidence, we generate $40$ incidence reports 
+using the Negative Binomial distribution. Specifically, we produce *two* sets of
+20 reports. The first set's level of noise is equivalent to that of the Poisson
+distribution (no overdispersion). Namely, the concentration parameter 
+($\phi^{-1}$) is set at zero. For the other set of reports, we add 
+overdispersion ($\phi^{-1} = 1/3$).
+
+### Poisson $D^{1j}$
 
 ```{r}
 phi_val <- 0 # Poisson
@@ -106,7 +167,7 @@ case_1_df <- do.call(rbind, y_list) |>
   mutate(disp = "phi^-1 ~'= 0'")
 ```
 
-## Case 2
+### Overdispersed $D^{1j}$
 
 ```{r}
 phi_val <- 1/3
@@ -147,7 +208,7 @@ ggsave("./plots/Fig_02_Measurements.pdf", plot = g, height = 5, width = 5)
 ```
 
 
-## Case 3
+### Poisson $D^{3j}$
 
 ```{r}
 i_val   <- 3
@@ -177,7 +238,7 @@ if(!file.exists(syn_data_file)) {
 }
 ```
 
-## Case 4
+### Overdispersed $D^{3j}$
 
 ```{r}
 phi_val <- 1/3
@@ -208,10 +269,21 @@ if(!file.exists(syn_data_file)) {
 }
 ```
 
-# Stan files
+# Inference files
 
-## Poisson
+As it widely known, one can employ mechanistic models as inference tools to
+match data in order to estimate unknown quantities. In this work, we perform
+the inference process through the Statistical software *Stan*. This software
+requires users to specify the instructions for the sampling process in Stan's 
+own language. In the sections below, we show examples of such language for
+the three parameterisations described in the main text.
 
+## Three-unknowns
+
+### Example 1
+
+Here is an example of an $M^{11}$ candidate coupled with a Poisson measurement
+model.
 
 ```{r}
 meas_mdl <- "pois"
@@ -228,37 +300,17 @@ info_files <- map2(i_list, j_list, \(M_i, M_j) {
 }) |> unlist(recursive = FALSE)
 
 saveRDS(info_files, "./Stan_files/Inference/Three_params/pois/meta_info.rds")
-#-------------------------------------------------------------------------------
-i_list   <- list(1)
-j_list   <- list(1:4)
-stan_fldr <- "./Stan_files/Inference/Four_params"
+```
 
-info_files <- map2(i_list, j_list, \(M_i, M_j) {
-  
-  info_files <- create_SEIR_files(M_i, M_j, inv_sigma_val, inv_gamma_val, N_val, 
-                                "pois", stan_fldr, gamma_unk = TRUE)
-}) |> unlist(recursive = FALSE)
-
-saveRDS(info_files, "./Stan_files/Inference/Four_params/pois/meta_info.rds")
-#-------------------------------------------------------------------------------
-stan_fldr <- "./Stan_files/Inference/Three_params_alt"
-i_list   <- list(1)
-j_list   <- list(1:4)
-
-info_files <- map2(i_list, j_list, \(M_i, M_j) {
-  
-  info_files <- create_SEIR_files(M_i, M_j, inv_sigma_val, inv_gamma_val, N_val, 
-                                meas_mdl, stan_fldr, gamma_unk = FALSE,
-                                alt_param = TRUE)
-}) |> unlist(recursive = FALSE)
-
-saveRDS(info_files, 
-        str_glue("{stan_fldr}/{meas_mdl}/meta_info.rds"))
-#-------------------------------------------------------------------------------
+```{r}
+read_file(info_files[[1]]$stan_filepath) |> cat()
 ```
 
 
-## Negative binomial
+### Example 2
+
+Here is an example of an $M^{32}$ candidate coupled with a Negative Binomial
+measurement model.
 
 ```{r}
 meas_mdl <- "nbin"
@@ -276,7 +328,45 @@ info_files <- map2(i_list, j_list, \(M_i, M_j) {
 }) |> unlist(recursive = FALSE)
 
 saveRDS(info_files, "./Stan_files/Inference/Three_params/nbin/meta_info.rds")
-#-------------------------------------------------------------------------------
+```
+
+```{r}
+read_file(info_files[[7]]$stan_filepath) |> cat()
+```
+
+## Four-unknowns
+
+### Example 1
+
+Here is an example of an $M^{14}$ candidate coupled with a Poisson measurement
+model.
+
+```{r}
+meas_mdl <- "pois"
+i_list   <- list(1)
+j_list   <- list(1:4)
+stan_fldr <- "./Stan_files/Inference/Four_params"
+
+info_files <- map2(i_list, j_list, \(M_i, M_j) {
+  
+  info_files <- create_SEIR_files(M_i, M_j, inv_sigma_val, inv_gamma_val, N_val, 
+                                "pois", stan_fldr, gamma_unk = TRUE)
+}) |> unlist(recursive = FALSE)
+
+saveRDS(info_files, "./Stan_files/Inference/Four_params/pois/meta_info.rds")
+```
+
+```{r}
+read_file(info_files[[4]]$stan_filepath) |> cat()
+```
+
+### Example 2
+
+Here is an example of an $M^{13}$ candidate coupled with a Negative Binomial
+measurement model.
+
+```{r}
+meas_mdl <- "nbin"
 i_list <- list(1)
 j_list <- list(1:4)
 stan_fldr <- "./Stan_files/Inference/Four_params"
@@ -290,7 +380,49 @@ info_files <- map2(i_list, j_list, \(M_i, M_j) {
 
 saveRDS(info_files, 
         str_glue("./Stan_files/Inference/Four_params/{meas_mdl}/meta_info.rds"))
-#-------------------------------------------------------------------------------
+```
+
+```{r}
+read_file(info_files[[3]]$stan_filepath) |> cat()
+```
+
+## Three-unknowns (Alternative)
+
+### Example 1
+
+Here is an example of an $M^{11}$ candidate coupled with a Poisson measurement
+model.
+
+```{r}
+meas_mdl <- "pois"
+stan_fldr <- "./Stan_files/Inference/Three_params_alt"
+i_list   <- list(1)
+j_list   <- list(1:4)
+
+info_files <- map2(i_list, j_list, \(M_i, M_j) {
+  
+  info_files <- create_SEIR_files(M_i, M_j, inv_sigma_val, inv_gamma_val, N_val, 
+                                meas_mdl, stan_fldr, gamma_unk = FALSE,
+                                alt_param = TRUE)
+}) |> unlist(recursive = FALSE)
+
+saveRDS(info_files, 
+        str_glue("{stan_fldr}/{meas_mdl}/meta_info.rds"))
+```
+
+```{r}
+read_file(info_files[[1]]$stan_filepath) |> cat()
+```
+
+
+### Example 2
+
+Here is an example of an $M^{12}$ candidate coupled with a Negative Binomial
+measurement model.
+
+
+```{r}
+meas_mdl <- "nbin"
 i_list <- list(1)
 j_list <- list(1:4)
 stan_fldr <- "./Stan_files/Inference/Three_params_alt"
@@ -304,10 +436,16 @@ info_files <- map2(i_list, j_list, \(M_i, M_j) {
 
 saveRDS(info_files, 
         str_glue("{stan_fldr}/{meas_mdl}/meta_info.rds"))
-#-------------------------------------------------------------------------------
 ```
 
-## Normal measurement model
+```{r}
+read_file(info_files[[2]]$stan_filepath) |> cat()
+```
+
+### Example 3
+
+Here is an example of an $M^{13}$ candidate coupled with a Gaussian measurement
+model.
 
 ```{r}
 meas_mdl <- "norm"
@@ -323,6 +461,10 @@ info_files <- map2(i_list, j_list, \(M_i, M_j) {
 
 saveRDS(info_files, 
         str_glue("{stan_fldr}/{meas_mdl}/meta_info.rds"))
+```
+
+```{r}
+read_file(info_files[[3]]$stan_filepath) |> cat()
 ```
 
 

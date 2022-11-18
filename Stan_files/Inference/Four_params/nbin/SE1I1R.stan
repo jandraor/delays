@@ -6,7 +6,7 @@ functions {
     real I_to_R;
     real C_in;
     S_to_E = params[1]*y[1]*y[3]/params[4];
-    E1_to_I1 = 0.5*y[2];
+    E1_to_I1 = params[5]*y[2];
     I_to_R = 1*params[3]*y[3];
     C_in = params[2]*E1_to_I1;
     dydt[1] = -S_to_E;
@@ -25,6 +25,7 @@ data {
   real t0;
   array[n_obs] real ts;
   real N;
+  real par_sigma;
   real xi;
 }
 parameters {
@@ -50,6 +51,7 @@ transformed parameters{
   params[2] = par_rho;
   params[3] = par_gamma;
   params[4] = N;
+  params[5] = par_sigma;
   x = ode_rk45(X_model, x0, t0, ts, params);
   delta_x_1[1] =  x[1, 5] - x0[5] + 1e-5;
   for (i in 1:n_obs-1) {

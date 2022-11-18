@@ -182,15 +182,25 @@ plot_nbin_pars <- function(df, inv_gamma_val, beta_val, phi_val, rho_val) {
 
 plot_incidence <- function(y_list, dist) {
   
-  y_all <- do.call(rbind, y_list)
+  y_all <- do.call(rbind, y_list) |> 
+    mutate(label_Dj = paste0("j = ", I_order))
+  
+  disp_val <- ifelse(dist == "Poisson", "0", "1/3")
   
   ggplot(y_all, aes(time, y)) +
-    geom_line(aes(group = dataset), colour = "grey80", alpha = 0.10) +
-    facet_wrap("I_order") +
+    geom_line(aes(group = dataset, colour = I_order), alpha = 0.10) +
+    scale_colour_manual(values = colours_df$colour) +
+    facet_wrap("label_Dj") +
     labs(x        = "Days", 
-         y        = "Incidence [Cases/day]",
-         subtitle = dist) +
-    theme_pubr()
+         y        = "Measured incidence [Cases/day]",
+         subtitle = parse(text = paste("phi^{-1}~'=", disp_val, "'"))) +
+    theme_classic() +
+    theme(legend.position = "none",
+          strip.background = element_rect(colour = "grey80"),
+          axis.title = element_text(colour = "grey40"),
+          axis.line  = element_line(colour = "grey80"),
+          axis.text  = element_text(colour = "grey60"),
+          axis.ticks = element_line(colour = "grey60"))
 }
 
 plot_measured_incidence <- function(y_list, disp_val) {
@@ -325,7 +335,8 @@ plot_R0_comparison_by_dataset <- function(fits_list, actual_val, x_min, x_max,
   
   M_i_size <- length(unique(summary_df$M_i))
   
-  summary_df <- summary_df |> mutate(label_M_i = paste0("i = ", M_i)) 
+  summary_df <- summary_df |> mutate(label_M_i = paste0("i = ", M_i),
+                                     label_ds  = paste0("dataset = ", dataset)) 
   
   g <- ggplot(summary_df, aes(x = mean_R0, y = as.factor(M_j))) +
     scale_y_discrete(limits = rev) +
@@ -334,12 +345,12 @@ plot_R0_comparison_by_dataset <- function(fits_list, actual_val, x_min, x_max,
                   linetype = "dotted")
   
   if(M_i_size == 1) {
-    g         <- g + facet_wrap(~dataset)
+    g         <- g + facet_wrap(~label_ds)
     title_txt <- paste0("'Error bars:' ~ M^{'", M_i, "j'}")
   }
   
   if(M_i_size > 1) {
-    g         <- g + facet_grid(dataset ~ label_M_i)
+    g         <- g + facet_grid(label_ds ~ label_M_i)
     title_txt <- paste0("'Error bars:' ~ M^ij")
   }
       
@@ -360,7 +371,8 @@ plot_R0_comparison_by_dataset <- function(fits_list, actual_val, x_min, x_max,
           axis.title = element_text(colour = "grey40"),
           axis.line  = element_line(colour = "grey80"),
           axis.text  = element_text(colour = "grey60"),
-          axis.ticks = element_line(colour = "grey60"))
+          axis.ticks = element_line(colour = "grey60"),
+          strip.text = element_text(colour = "grey50"))
 }
 
 plot_R0_posterior <- function(posterior_df, actual_val, D_i, D_j) {
@@ -698,36 +710,38 @@ prior_posterior_comparison <- function(posterior_df, prior_df, par_name) {
           plot.caption  = element_text(colour = "grey40"))
 }
 
-plot_R0_vs_tau <- function(df, inv_sigma = 2, inv_gamma = 2) {
+plot_R0_vs_tau <- function(df, ds, x_lims, y_lims) {
   
-  M_i <- unique(df$M_i)
+  df <- df |> filter(dataset == ds, D_j == 2) |> 
+    mutate(label_Dij = paste0("D^", D_i, D_j))
   
-  df <- df |> mutate(label_Dij = paste0("D^", D_i, D_j))
+  M_i          <- unique(df$M_i)
+  subtitle_txt <- title_txt <- paste0("'Points:' ~ M^{'", M_i, "j'}")
   
-  df <- df |> group_by(D_j, M_i, M_j, dataset) |> 
-    slice_sample(n = 100)
-  
-  subtitle_txt <- parse(text = paste0("'Points:' ~ M^{'", M_i, "j'}"))
-  
-  ggplot(df, aes(M_j, R0)) +
-    geom_point(aes(group = id, colour = as.factor(M_j)), alpha = 0.25, 
-               fill = "white", size = 0.1) +
-    scale_colour_manual(values = colours_df$colour) +
-    facet_grid(dataset~label_Dij, labeller = label_parsed) +
-    geom_vline(aes(xintercept = mean_generation_time(D_j, inv_sigma, inv_gamma)),
-               colour = "grey60", linetype = "dashed", alpha = 0.75) +
-    geom_hline(yintercept = R0_val, colour = "grey60", linetype = "dotted",
-               alpha = 0.75) +
-    labs(y = bquote(R[0]), x = parse(text = "'Generation time' ~ (tau)"),
-         colour = "j",
-         subtitle = subtitle_txt) +
-    theme_pubr() +
-    theme(legend.position = "bottom",
-          axis.title = element_text(colour = "grey40"),
+  ggplot(df, aes(tau, R0)) +
+    geom_point(aes(group = id, colour = as.factor(M_j)),
+               fill = "white", size = 1, shape = 1, alpha = 0.5) +
+    scale_colour_manual(values = colours_df$colour, name = "j") +
+    facet_wrap(~label_Dij, labeller = label_parsed, ncol = 4) +
+    geom_vline(aes(xintercept = mean_generation_time(D_j, 2, 2)),
+               colour = "grey50", linetype = "dashed") +
+    geom_hline(yintercept = R0_val, colour = "grey50", linetype = "dotted") +
+    scale_x_continuous(limits = x_lims, breaks = c(0, 5, 10)) +
+    scale_y_continuous(limits = y_lims) +
+    labs(x = bquote(tau), y = parse(text = "\u211c[0]"),
+         subtitle = parse(text = subtitle_txt)) +
+    guides(alpha = "none") +
+    theme_classic() +
+    theme(text = element_text(family = "Arial Unicode MS"),
+          legend.position = "none",
           axis.line  = element_line(colour = "grey80"),
-          axis.text  = element_text(colour = "grey60"),
           axis.ticks = element_line(colour = "grey60"),
-          strip.background = element_rect(colour = "white"))
+          axis.title.x  = element_text(colour = "grey40"),
+          axis.title.y  = element_text(colour = "grey40", angle = 0, 
+                                       vjust = 0.5),
+          strip.background = element_rect(colour = "grey95"),
+          axis.text.x   = element_text(colour = "grey60"),
+          axis.text.y   = element_text(colour = "grey60"))
 }
 
 plot_scatterplot_R0_vs_tau <- function(df, x_lims, y_lims) {
@@ -748,14 +762,16 @@ plot_scatterplot_R0_vs_tau <- function(df, x_lims, y_lims) {
     geom_hline(yintercept = R0_val, colour = "grey50", linetype = "dotted") +
     scale_x_continuous(limits = x_lims) +
     scale_y_continuous(limits = y_lims) +
-    labs(x = bquote(tau), y = bquote(R[0]),
+    labs(x = bquote(tau), 
+         y = parse(text = "\u211c[0]"),
          caption = paste("Dashed line: Data's generation time",
                          "Dotted line: Data's basic reproduction number",
                          sep = "\n"),
          subtitle = parse(text = subtitle_txt)) +
     guides(alpha = FALSE) +
     theme_classic() +
-    theme(legend.position = "bottom",
+    theme(text = element_text(family = "Arial Unicode MS"),
+          legend.position = "bottom",
           plot.caption = element_text(hjust = 0))
 }
 
@@ -779,13 +795,15 @@ plot_R0_vs_tau_by_fitting_model <- function(df, ds, x_lims, y_lims) {
     geom_hline(yintercept = R0_val, colour = "grey50", linetype = "dotted") +
     scale_x_continuous(limits = x_lims, breaks = c(0, 5, 10)) +
     scale_y_continuous(limits = y_lims, breaks = c(0, 3, 6)) +
-    labs(x = parse(text = "'Mean generation time ('~tau~')'"), y = bquote(R[0]),
+    labs(x = parse(text = "'Mean generation time ('~tau~')'"), 
+         y = parse(text = "\u211c[0]"),
          caption = paste("Dashed line: Data's generation time",
                          "Dotted line: Data's basic reproduction number",
                          sep = "\n"),
          subtitle = parse(text = subtitle_txt)) +
     theme_classic() +
-    theme(legend.position = "none",
+    theme(text = element_text(family = "Arial Unicode MS"),
+          legend.position = "none",
           plot.caption = element_text(hjust = 0, size = 6, colour = "grey35"),
           axis.title.x  = element_text(colour = "grey40"),
           axis.title.y  = element_text(colour = "grey40", angle = 0, 

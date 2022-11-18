@@ -90,3 +90,30 @@ table_scenarios <- function(df) {
                tau = html("&tau;"))
   
 }
+
+table_parameters <- function(df) {
+  
+  df |> gt() |> 
+    tab_style(
+      locations = cells_column_labels(columns = everything()),
+      style     = list(
+        #Give a thick border below
+        cell_borders(sides = "bottom", weight = px(3)),
+        #Make text bold
+        cell_text(weight = "bold")
+      ))
+}
+
+table_inits <- function(df) {
+  
+  df |> gt() |> 
+    tab_style(
+      locations = cells_column_labels(columns = everything()),
+      style     = list(
+        #Give a thick border below
+        cell_borders(sides = "bottom", weight = px(3)),
+        #Make text bold
+        cell_text(weight = "bold")
+      )) |> 
+    cols_label(init = "Init value")
+}
