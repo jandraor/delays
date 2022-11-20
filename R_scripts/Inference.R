@@ -1,6 +1,6 @@
 fit_SEIR <- function(info_files, D_i, D_j, ds, epi_df, root_fldr, n_chains, 
                     samples_per_chain, n_params, alt_param, inv_gamma,
-                    inv_sigma) {
+                    inv_sigma, set_gamma = TRUE) {
   
   lapply(info_files, function (info) {
     
@@ -30,23 +30,21 @@ fit_SEIR <- function(info_files, D_i, D_j, ds, epi_df, root_fldr, n_chains,
       
       N <- nrow(epi_df)
       
-      stan_d <- list(n_obs    = N,
-                     y        = epi_df$y,
-                     n_params = n_params,
-                     n_difeq  = n_stocks,
-                     t0       = 0,
-                     ts       = 1:N,
-                     N        = 1e4,
-                     xi       = 0)
+      stan_d <- list(n_obs     = N,
+                     y         = epi_df$y,
+                     n_params  = n_params,
+                     n_difeq   = n_stocks,
+                     t0        = 0,
+                     ts        = 1:N,
+                     N         = 1e4,
+                     xi        = 0,
+                     par_sigma = 1 / inv_sigma)
       
-      if(alt_param) {
-        stan_d$par_tau <- mean_generation_time(j         = D_j, 
-                                               sigma_inv = inv_sigma, 
-                                               gamma_inv = inv_gamma)
-        
-        stan_d$par_sigma <- 1 / inv_sigma
-      }
+      if(set_gamma) stan_d$par_gamma <- 1 / inv_gamma 
       
+      if(alt_param) stan_d$par_tau <- mean_generation_time(j         = D_j, 
+                                                           sigma_inv = inv_sigma, 
+                                                           gamma_inv = inv_gamma)
       
       mod <- cmdstan_model(stan_filepath)
       
@@ -104,6 +102,7 @@ fit_datasets <- function(D_i, D_j, n_data, y_df, info_files, root_fldr,
                          n_chains, samples_per_chain, n_params, 
                          alt_param = FALSE, inv_gamma = 2,
                          inv_sigma = 2) {
+  
   
   lapply(1:n_data, function(ds) {
 

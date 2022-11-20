@@ -52,36 +52,6 @@ table_coverage <- function(df) {
   gt_table
 }
 
-table_success <- function(df, n_data) {
-  
-  df <- df |> 
-    mutate(success       = ifelse(D_j == M_j, 1, 0),
-           success_dist  = ifelse(D_dist == M_dist, 1, 0),
-           D_j           = as.factor(D_j))
-  
-  summary_df <- df |> group_by(D_j) |> 
-    summarise(n_successes      = sum(success),
-              n_successes_dist = sum(success_dist),
-              .groups          = "drop") |> 
-    mutate(pct_success      = n_successes / n_data,
-           pct_success_dist = n_successes_dist / n_data)
-  
-
-  
-  summary_df |> gt() |>  
-    fmt_percent(
-      columns  = c(pct_success, pct_success_dist),
-      decimals = 0 
-    ) |> 
-    cols_label(
-      D_j              = "Dj",
-      n_successes      = "# of successes", 
-      n_successes_dist = "# of successes (dist)",
-      pct_success      = "Success",
-      pct_success_dist = "Success (dist)"
-     )
-}
- 
 table_scenarios <- function(df) {
   
   df |> 

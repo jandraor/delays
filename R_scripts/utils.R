@@ -67,3 +67,15 @@ estimate_MLE_score <- function(MLE_results) {
     group_by(window, D_n, sqrt_error) |> 
     summarise(pct_success = sum(pct_success), .groups = "drop")
 }
+
+save_synthetic_data <- function(syn_data_file, y_df) {
+  
+  if(file.exists(syn_data_file)) {
+    
+    saved_data <- read_csv(syn_data_file)
+    stopifnot(identical(sum(y_df$y), sum(saved_data$y)))
+  }
+  
+  if(!file.exists(syn_data_file)) write_csv(y_df, syn_data_file)
+  invisible()
+}
