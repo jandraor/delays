@@ -57,7 +57,7 @@ table_scenarios <- function(df) {
   df |> 
     gt()  |> 
     cols_label(R0      = html("\u211c<sub>0</sub>",),
-               tau = html("&tau;"))
+               tau = html("&tau;<sub>e</sub>"))
   
 }
 
