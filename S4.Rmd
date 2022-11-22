@@ -69,7 +69,7 @@ M_j       <- 1:4
 
 As the name suggests, for candidates from this parameterisation, we assume that
 two parameters and one initial condition are unknown: $\beta$, $\rho$, and 
-$I^1_0$. Each candidate is coupled with the the Poisson distribution. 
+$I^1_0$. Each candidate is coupled with the Poisson distribution. 
 
 ## Prior distributions {#link1}
 
@@ -617,8 +617,6 @@ coverage_df <- bind_rows(coverage_1, coverage_2) |>
 table_coverage(coverage_df)
 ```
 
-
-
 # Four unknowns
 
 In this parameterisation, for each candidate, we assume one additional unknown
@@ -859,7 +857,6 @@ pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
 ```
 
 #### Marginal posterior distributions
-
 
 ##### Basic reproduction number ($\Re_0$)
 
@@ -1237,7 +1234,6 @@ pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
 
 #### Marginal posterior distributions
 
-
 ##### Basic reproduction number ($\Re_0$)
 
 ```{r}
@@ -1296,7 +1292,6 @@ pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
 ```
 
 #### Marginal posterior distributions
-
 
 ##### Basic reproduction number ($\Re_0$)
 
