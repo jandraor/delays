@@ -9,7 +9,7 @@ output:
 ---
 
 This appendix illustrates the process of fitting various parameterisations
-of the $SE^1I^jR$ model ($M^{1j}$) to Poisson $D^{1j}$ incidence reports. We 
+of the $SE^1I^jR$ model ($M^{1j}$) to **Poisson $D^{1j}$** incidence reports. We 
 mean by *parameterisation* the decision of categorising parameters as either 
 *unknown* or *assumed*. For unknown parameters, we construct prior 
 distributions, which will be eventually updated in light of the data via
@@ -217,7 +217,7 @@ plot_R0_comparison_by_dataset(posterior_subset, R0_val, R0_bounds[[1]],
                               R0_bounds[[2]], D_i, D_j)
 ```
 
-##### $I_0$ estimates
+##### Initial number of infectious individuals ($I_0$)
 
 ```{r}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0, x_max = 2, 
@@ -300,7 +300,7 @@ pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
 
 #### Marginal posterior distributions
 
-##### Basic reproduction number ($R_0$)
+##### Basic reproduction number ($\Re_0$)
 
 ```{r}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, R0_bounds[[1]], 
@@ -311,14 +311,14 @@ plot_R0_comparison_by_dataset(posterior_subset, R0_val, R0_bounds[[1]],
 rg2 <- plot_R0_posterior(posterior_sample, R0_val, D_i, D_j)
 ```
 
-##### $I_0$ estimates
+##### Initial number of infectious individuals ($I_0$)
 
 ```{r}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0, x_max = 2, 
                               x_label = "I[0]", D_i, D_j)
 ```
 
-##### Reporting rate ($\rho$) estimates
+##### Reporting rate ($\rho$) 
 
 ```{r}
 plot_par_estimates_by_dataset(posterior_subset, "par_rho", rho_val, 
@@ -391,7 +391,7 @@ pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
 
 #### Marginal posterior distributions
 
-##### Basic reproduction number ($R_0$)
+##### Basic reproduction number ($\Re_0$)
 
 ```{r}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, R0_bounds[[1]], 
@@ -402,14 +402,14 @@ plot_R0_comparison_by_dataset(posterior_subset, R0_val, R0_bounds[[1]],
 rg3 <- plot_R0_posterior(posterior_sample, R0_val, D_i, D_j)
 ```
 
-##### $I_0$ estimates
+##### Initial number of infectious individuals ($I_0$)
 
 ```{r}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0, x_max = 2, 
                               x_label = "I(0)", D_i, D_j)
 ```
 
-##### Reporting rate ($\rho$)
+##### Reporting rate ($\rho$) 
 
 ```{r}
 plot_par_estimates_by_dataset(posterior_subset, "par_rho", rho_val, 
@@ -481,7 +481,7 @@ pairs_posterior(joint_posterior_df,strip_text = 10, axis_text_size = 7,
 
 #### Marginal posterior distributions
 
-##### Basic reproduction number ($R_0$)
+##### Basic reproduction number ($\Re_0$)
 
 ```{r}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, R0_bounds[[1]], 
@@ -492,7 +492,7 @@ plot_R0_comparison_by_dataset(posterior_subset, R0_val, R0_bounds[[1]],
 rg4 <- plot_R0_posterior(posterior_sample, R0_val, D_i, D_j)
 ```
 
-##### $I_0$ estimates
+##### Initial number of infectious individuals ($I_0$)
 
 ```{r}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0, x_max = 2, 
@@ -576,7 +576,7 @@ plot_MLE_summary(MLE_df)
 
 In this parameterisation, for each candidate, we assume one additional unknown
 parameter: the recovery rate ($\gamma$). Furthermore, all candidates are coupled
-coupled with the Poisson distribution.
+with the Poisson distribution.
 
 ```{r}
 root_fldr  <- "./Saved_objects/Inference/Synthetic_data/SEIR/Case_1/Four_params"
