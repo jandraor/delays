@@ -1,0 +1,269 @@
+---
+title: "S7"
+output: 
+  html_document:
+    toc: true
+    toc_float:
+      smooth_scroll: FALSE
+    number_sections: true
+---
+
+In this appendix, we illustrate the process undertaken to infer the basic 
+reproduction number ($\Re_0$) of influenza during the second wave of the 
+**1918 pandemic** in Cumberland (Maryland). Specifically,  we fit four model 
+candidates of the **alternative parameterisation** of the **SEIR** to incidence 
+data that yield almost identical estimates of $\Re_0$  regardless of the 
+distribution of the infectious period. Furthermore, we compare the results of 
+the alternative parameterisation to those of the *traditional* one.
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+library(cmdstanr)
+library(dplyr)
+library(purrr)
+library(readr)
+library(readsdr)
+library(stringr)
+library(tictoc)
+library(tidyr)
+
+source("./R_scripts/formulas.R")
+source("./R_scripts/Inference.R")
+source("./R_scripts/plots.R")
+source("./R_scripts/plots_Cumberland.R")
+source("./R_scripts/posterior_utils.R")
+```
+
+# Incidence data
+
+After enduring a wave of influenza infections during the spring of 1918,
+the U.S. Public Health Service organised special surveys in several localities
+to determine as accurately as possible the proportion of the population 
+infected during the second wave of infections in the autumn of 1918. In the 
+figure below, we show the report of new cases detected in the city of 
+Cumberland (Maryland) over that period.
+
+```{r}
+Maryland_data <- read_csv("./data/Maryland_incidence.csv", 
+                          show_col_types = FALSE)
+
+
+Cumberland_df <- Maryland_data |> select(Date, Cumberland) |> 
+  mutate(time = row_number()) |> 
+  rename(y = Cumberland)
+
+plot_epi_bars(Cumberland_df)
+```
+
+# Inference
+
+We employ four candidates per parameterisation (traditional and alternative). 
+On the one hand, the traditional parameterisation refers to the approach of 
+fixing the mean of the latent and infectious period to values obtained from the
+literature, irrespective of distribution for the epidemiological delays. On the 
+other hand, the proposed alternative parameterisation refers to the special
+emphasis placed on mean generation time of the **SEIR**, while flexibilising 
+the mean and distribution of the epidemiological delays. Namely, the 
+epidemiological delays can take any mean or shape provided that as a whole they
+conform to the observed mean generation time. Furthermore, following the results
+shown in **S4** and **S5**, for all candidates, we assume an 
+exponentially-distributed latent period ($SE^1I^jR$), where $j = \{1,2,3,4\}$.
+
+## Prior distribution
+
+Prior distributions for both parameterisations correspond to those employed in
+*S3*.
+
+```{r}
+n_chains          <- 4
+samples_per_chain <- 1000
+```
+
+<!-- ## Three unknown parameters -->
+
+```{r}
+root_fldr <- "./Saved_objects/Inference/Cumberland/Three_params"
+M_i      <- 1
+M_j      <- 1:4
+
+
+info_files <- readRDS("./Stan_files/Inference/Three_params/nbin/meta_info.rds")[1:length(M_j)]
+
+ll_list <- vector(mode = "list", length = length(M_j))
+```
+
+```{r}
+trad_df <- fit_single_dataset(info_files, Cumberland_df, root_fldr, n_chains,
+                               samples_per_chain, n_params = 3, 
+                               alt_param = FALSE, N = 5234,
+                               xi = 0.3) |> 
+  mutate(tau = mean_generation_time(M_j, 2, 2),
+         R0  = par_beta * 2,
+         parameterisation = "Traditional")
+```
+
+
+```{r}
+ppc_file <- file.path(root_fldr, "./ppc.rds")
+
+if(!file.exists(ppc_file)) {
+  map_df(1:4, posterior_pred_checks, 1000, FALSE) -> pred_incidence1 
+  saveRDS(pred_incidence1 , ppc_file)
+} else {
+  pred_incidence1 <- readRDS(ppc_file)
+}
+```
+
+<!-- ## Three unknown parameters (alternative) -->
+
+```{r}
+root_fldr <- "./Saved_objects/Inference/Cumberland/Three_params_alt"
+M_i      <- 1
+M_j      <- 1:4
+
+info_files <- readRDS("./Stan_files/Inference/Three_params_alt/nbin/meta_info.rds")[1:length(M_j)]
+
+ll_list <- vector(mode = "list", length = length(M_j))
+```
+
+```{r}
+alt_df <- fit_single_dataset(info_files, Cumberland_df, root_fldr, n_chains,
+                               samples_per_chain, n_params = 4, 
+                               alt_param = TRUE, N = 5234,
+                               xi = 0.3, fixed_tau = 2.85) |> 
+  mutate(tau = 2.85,
+         R0  = 1 / par_inv_R0,
+         parameterisation = "Alternative")
+```
+
+```{r}
+ppc_file <- file.path(root_fldr, "./ppc.rds")
+
+if(!file.exists(ppc_file)) {
+  
+  map_df(1:4, posterior_pred_checks, 1000, TRUE) -> pred_incidence2 
+  saveRDS(pred_incidence2 , ppc_file)
+} else pred_incidence2  <- readRDS(ppc_file)
+
+```
+
+
+## Posterior distribution
+
+### Incidence fit
+
+```{r}
+latent_incidence1 <- extract_incidence(trad_df, 40) |> 
+  mutate(parameterisation = "Traditional")
+
+latent_incidence2 <- extract_incidence(alt_df, 40)  |> 
+  mutate(parameterisation = "Alternative")
+
+latent_incidence <- bind_rows(latent_incidence1, latent_incidence2)
+
+latent_incidence$parameterisation <- factor(latent_incidence$parameterisation,
+                                            levels = c("Traditional", 
+                                                       "Alternative"))
+```
+
+```{r}
+#plot_Cmb_latent_incidence(latent_incidence, Cumberland_df)
+```
+
+```{r}
+pred_incidence1 <- pred_incidence1 |> mutate(parameterisation = "Traditional")
+pred_incidence2 <- pred_incidence2 |> mutate(parameterisation = "Alternative")
+
+pred_incidence <- bind_rows(pred_incidence1, pred_incidence2)
+
+pred_incidence$parameterisation <- factor(pred_incidence$parameterisation,
+                                            levels = c("Traditional", 
+                                                       "Alternative"))
+```
+
+```{r}
+plot_posterior_pred_checks(pred_incidence, Cumberland_df)
+```
+
+
+```{r}
+p1 <- plot_posterior_pred_checks(pred_incidence2, Cumberland_df,
+                                 "'Line, ribbon & error bars:'")
+```
+
+### Joint posterior distribution
+
+
+
+
+### Marginal distributions
+
+```{r}
+both_df <- bind_rows(trad_df, alt_df)
+both_df$parameterisation <- factor(both_df$parameterisation,
+                                   levels = c("Traditional", "Alternative"))
+```
+
+#### Basic reproduction number ($\Re_0$)
+
+```{r}
+plot_hist_by_M_j(both_df, "R0", x_label = "R[0]", c(1.8, 2.5), n_bins = 50)
+```
+
+```{r}
+summary_df <- alt_df |> group_by(M_j) |>  
+  summarise(mean_R0     = mean(R0),
+            lower_bound = quantile(R0, 0.025),
+            upper_bound = quantile(R0, 0.975),
+            .groups = "drop")
+
+p2 <- ggplot(summary_df, aes(x = mean_R0, y = as.factor(M_j))) +
+  scale_x_continuous(limits = c(1.8, 2.2), n.breaks = 3) +
+  scale_y_discrete(limits = rev) +
+  geom_errorbar(aes(xmin = lower_bound, xmax = upper_bound, 
+                      colour = as.factor(M_j)), alpha = 0.75, 
+                  width = 0.5) +
+  scale_colour_manual(values = c(colours_df$colour, colours_df$colour)) +
+  labs(x = parse(text = "\u211c[0]"),
+       y = "j") +
+  theme_classic() +
+    theme(text = element_text(family = "Arial Unicode MS"),
+          legend.position = "none",
+          axis.text  = element_text(colour = "grey60", size = 4.5),
+          axis.line  = element_line(colour = "grey80"),
+          axis.title.x = element_text(colour = "grey40", size = 6),
+          axis.title.y = element_text(colour = "grey40", angle = 0, 
+                                       vjust = 0.5, size = 6),
+           axis.ticks = element_line(colour = "grey60"),
+          plot.background = element_rect(colour = "grey70"))
+```
+
+```{r}
+plot_Cumberland <- p1 + inset_element(p2, left = 0.38, bottom = 0.7, right = 0.58, top = 0.99)
+
+ggsave("./plots/Fig_07_Cumberland.pdf", plot_Cumberland , height = 4, 
+       width = 5,
+       device = cairo_pdf)
+```
+
+
+
+#### Reporting rate ($\rho$)
+
+```{r}
+plot_hist_by_M_j(both_df, "par_rho", x_label = "rho", c(0, 1), 60)
+```
+
+#### Initial number of infectious individuals ($I_0$) 
+
+```{r}
+plot_hist_by_M_j(both_df, "I0", x_label = "I(0)", c(0, 8), 30)
+```
+
+#### Overdispersion parameter ($\phi^{-1}$)
+
+```{r}
+plot_hist_by_M_j(both_df, "inv_phi", x_label = "phi^-1", c(0, 1))
+```

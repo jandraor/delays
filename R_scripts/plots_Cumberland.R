@@ -31,32 +31,39 @@ plot_epi_bars <- function(df){
          y = "Incidence (People per day)") 
 }
 
-plot_posterior_pred_checks <- function(incidence_df, data_df) {
+plot_posterior_pred_checks <- function(incidence_df, data_df,
+                                       title_lhs = "'Line & ribbon:'") {
   
   incidence_summary <- incidence_df |> group_by(time, M_j, parameterisation) |> 
     summarise(mean = mean(y),
               lb   = quantile(y, 0.025),
               ub   = quantile(y, 0.975),
-              .groups = "drop")
+              .groups = "drop") |> 
+    mutate(label_Mj = paste0("j = ", M_j))
+  
+  title_txt <- paste0(title_lhs ," ~ M^{'", M_i, "j'}")
   
   ggplot(incidence_summary, aes(time, mean)) +
     geom_ribbon(data = incidence_summary, alpha = 0.1,
                 aes(y = mean, ymin = lb, ymax = ub, fill = as.factor(M_j))) +
     geom_line(aes(colour = as.factor(M_j))) +
-    facet_grid(parameterisation~M_j) +
+    facet_grid(parameterisation~label_Mj) +
     scale_colour_manual(values = colours_df$colour) +
     scale_fill_manual(values = colours_df$colour) +
     geom_point(data = data_df, aes(y = y), size = 1, colour = Cmb_colour,
                shape = 18) +
     labs(x        = "Days", 
-         y        = "Incidence [Cases/day]") +
+         y        = "Incidence [Cases/day]",
+         title    = parse(text = title_txt),
+         subtitle = "Points: Cumberland") +
     theme_classic() +
     theme(legend.position = "none",
           axis.title = element_text(colour = "grey40"),
           axis.line  = element_line(colour = "grey80"),
           axis.text  = element_text(colour = "grey60"),
           axis.ticks = element_line(colour = "grey60"),
-          strip.background = element_rect(colour = "grey80"))
+          strip.background = element_rect(colour = "grey80"),
+          plot.subtitle = element_text(margin = margin(0, 0, 0.1, 0, "cm")))
 }
 
 plot_hist_by_M_j <- function(posteriors_df, var_name, x_label, lims, 
