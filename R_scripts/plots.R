@@ -60,34 +60,6 @@ plot_meas_incidence_by_overdispersion <- function(df) {
           plot.subtitle = element_text(colour = "grey45"))
 }
 
-plot_ts_by_I_order <- function(y_df) {
-  
-  h_df <- y_df |> mutate(highlight = "1", group = I_order)
-  
-  orders <- unique(y_df$I_order)
-  
-  b_df <- map_df(orders, function(o) {
-    y_df |> mutate(group   = o,
-                   highlight = "0")
-  })
-  
-  
-  df <- bind_rows(h_df, b_df) |> 
-    mutate(id = paste(I_order, group, highlight, sep = "_"))
-  
-  
-  ggplot(df, aes(x = time, y =  x)) +
-    geom_line(aes(colour = highlight, group = id, alpha = highlight)) +
-    scale_colour_manual(values = c("grey90", "steelblue")) +
-    scale_alpha_manual(values = c(0.5, 1)) +
-    facet_wrap(~group) +
-    labs(y = "Incidence [Cases/day]", x = "Day") +
-    theme_classic() +
-    theme(legend.position = "none")
-  
-  
-}
-
 plot_hist_mase <- function(posterior_sample, y_df, lims = c(0, 0.5)) {
   
   actual_E <- unique(posterior_sample$D_i)
@@ -128,56 +100,72 @@ plot_hist_mase <- function(posterior_sample, y_df, lims = c(0, 0.5)) {
     facet_grid(label_Mj~data, scales = "free_x") +
     geom_vline(data = mean_df, aes(xintercept = mean_mase, colour = label_Mj)) +
     scale_colour_manual(values = colours_df$colour) +
-    labs(x        = "Mean absolute scale error", y = "",
+    labs(x        = "Mean absolute scale error (MASE)", y = "",
          caption  = paste0("Dataset: ", ds, "\n", "Line: Mean value"),
          subtitle = parse(text = sub_txt)) +
     theme_classic() +
-    theme(legend.position = "none")
+    theme(legend.position = "none",
+          axis.line  = element_line(colour = "grey80"),
+          strip.background = element_rect(colour = "grey80"),
+          axis.ticks = element_line(colour = "grey60"),
+          axis.text  = element_text(colour = "grey60"))
 }
 
-plot_hist_errors <- function(df) {
+plot_hist_mase2 <- function(posterior_sample, y_df, lims = c(0, 0.5)) {
   
-  hist_df <- df |> group_by(error) |> 
-    summarise(count = n()) |> 
-    mutate(pct = count/sum(count))
+  actual_E <- unique(posterior_sample$D_i)
+  actual_I <- unique(posterior_sample$D_j)
+  ds       <- unique(posterior_sample$dataset)
+  
+  act_x <- y_df |> filter(E_order == actual_E, I_order == actual_I, 
+                          dataset == ds) |> pull(x)
+  
+  lbls_ordered <- str_glue("i = {rep(c(1, 3), 4)}, j = {rep(1:4, each = 2)}")
+  
+  posterior_mase_x <- extract_incidence(posterior_sample, 4000) |> 
+    group_by(iter, M_i, M_j) |> summarise(mase = mase(act_x, value),
+                                     .groups = "drop") |> 
+    mutate(label_Mij = paste0("i = ", M_i,", ","j = ", M_j),
+           data = "x",
+           label_Mij = factor(label_Mij, levels = lbls_ordered))
+  
+  act_y <- y_df |> filter(E_order == actual_E, I_order == actual_I, 
+                          dataset == ds) |> pull(y)
+  
+  posterior_mase_y <- extract_incidence(posterior_sample, 4000) |> 
+    group_by(iter, M_i, M_j) |> summarise(mase = mase(act_y, value),
+                                     .groups = "drop") |> 
+    mutate(label_Mij = paste0("i = ", M_i,", ","j = ", M_j),
+           data = "y",
+           label_Mij = factor(label_Mij, levels = lbls_ordered))
   
   
-  brks <- seq(0, 0.4, 0.1)
+  posterior_mase <- bind_rows(posterior_mase_x, posterior_mase_y)
   
-  ggplot(hist_df, aes(x = error, y = pct)) +
-    geom_col(colour = "steelblue",
-             fill   = "white") +
-    scale_y_continuous(breaks = brks, labels = scales::percent(brks)) +
-    scale_x_continuous(breaks = 0:8, labels = 0:8, limits = c(NA, 8)) +
-    labs(y = "", x = "Order error") +
-    theme_pubr()
+  sub_txt <- paste0("'Histograms:' ~ M^{'ij'}")
   
-}
-
-plot_nbin_pars <- function(df, inv_gamma_val, beta_val, phi_val, rho_val) {
+  mean_df <- posterior_mase |> group_by(label_Mij, M_i, M_j, data) |> 
+    summarise(mean_mase = mean(mase))
   
-  R0_val <- beta_val * inv_gamma_val
-  
-  df <- df |> 
-    mutate(`R[0]` = beta * inv_gamma_val,
-             highlight = ifelse(D_n == M_n, TRUE, FALSE)) |> 
-    select(`R[0]`, phi, rho, highlight, M_n) 
-  
-  tidy_df <- df |> pivot_longer(-c(M_n, highlight))
-  
-  yi_df <- data.frame(name = c("R[0]", "phi", "rho"), 
-                      y_val = c(R0_val, phi_val, rho_val))
-  
-  ggplot(tidy_df, aes(x = M_n, y = value)) +
-    geom_boxplot(aes(group = M_n, colour = highlight)) +
-    geom_hline(data = yi_df, aes(yintercept = y_val), linetype = "dashed", 
-               colour = "grey65", alpha = 0.5) +
-    scale_colour_manual(values = c("grey50", "steelblue")) +
-    scale_x_continuous(breaks = 1:9) +
-    facet_wrap(~name, scales = "free", labeller = label_parsed, ncol = 1) +
-    labs(x = "Model order", y = "Value") +
-    theme_pubr() +
-    theme(legend.position = "none")
+  ggplot(posterior_mase, aes(mase)) +
+    scale_x_continuous(limits = lims) +
+    scale_y_continuous(n.breaks = 3) +
+    geom_histogram(aes(fill = as.factor(M_j)), alpha = 0.9) +
+    scale_fill_manual(values = colours_df$colour) +
+    facet_grid(label_Mij~data, scales = "free_x") +
+    geom_vline(data = mean_df, aes(xintercept = mean_mase, 
+                                   colour = as.factor(M_j))) +
+    scale_colour_manual(values = colours_df$colour) +
+    labs(x        = "Mean absolute scale error (MASE)", y = "",
+         caption  = paste0("Dataset: ", ds, "\n", "Line: Mean value"),
+         subtitle = parse(text = sub_txt)) +
+    theme_classic() +
+    theme(legend.position = "none",
+          axis.line  = element_line(colour = "grey80"),
+          strip.background = element_rect(colour = "grey80"),
+          axis.ticks = element_line(colour = "grey60"),
+          axis.text  = element_text(colour = "grey60"),
+          strip.text.y = element_text(angle = 0, vjust = 0.5))
 }
 
 plot_incidence <- function(y_list, dist) {
@@ -229,19 +217,6 @@ plot_measured_incidence <- function(y_list, disp_val) {
     
 }
 
-plot_x_prediction_facets <- function(x_summary, y_subset) {
-  
-  ggplot(x_summary, aes(time, q50)) +
-    geom_line(colour = "steelblue") +
-    geom_ribbon(alpha = 0.1, aes(ymin = q2.5, ymax = q97.5),
-                fill = "steelblue") +
-    geom_ribbon(alpha = 0.2, aes(ymin = q25, ymax = q75),
-                fill = "steelblue") +
-    geom_point(data = y_subset, aes(time, x), size = 0.5, colour = "grey50") +
-    facet_grid(M_n ~ dataset) +
-    theme_pubr()
-}
-
 plot_x_prediction <- function(x_summary, y_subset) {
   
   ggplot(x_summary |> mutate(M_n = as.factor(M_n)), 
@@ -272,34 +247,6 @@ plot_par_comparison <- function(df, par_name, actual_value, D_m, D_n, x_label) {
           axis.text.y  = element_blank(),
           axis.line.y  = element_blank())
 }
-
-plot_prediction_comparison <- function(ELDP_default, ELDP_best, MLE_results, D_n) {
-  
-  MLE_predictions <- MLE_results |> 
-    filter(D_n == !!D_n) |> 
-    select(M_n, n, window)
-  
-  ELDP_default <- ELDP_default |> mutate(window = "LFO-CV (all points)")
-  ELDP_best    <- ELDP_best |> mutate(window = "LFO-CV (optim)")
-  
-  ELDP_df <- bind_rows(ELDP_default, ELDP_best)
-  
-  summary_predictions <- ELDP_df |> 
-    group_by(M_n, window) |> 
-    summarise(n = n(), .groups = "drop") |> 
-    bind_rows(MLE_predictions) |> 
-    mutate(is_correct = ifelse(D_n == M_n, TRUE, FALSE))
-  
-  ggplot(summary_predictions, aes(M_n, n)) +
-    geom_col(aes(fill = is_correct), colour = "white") +
-    scale_fill_manual(values = c("grey65", "steelblue")) +
-    facet_wrap(~window) +
-    scale_x_continuous(limits = c(0, 5)) +
-    labs(y = "Count", x = bquote(I^n)) +
-    theme_pubr()
-}
-
-
 
 summarise_R0_posterior <- function(posterior_df) {
   
@@ -367,12 +314,16 @@ plot_R0_comparison_by_dataset <- function(fits_list, actual_val, x_min, x_max,
          subtitle = parse(text = paste0("'Vertical line:' ~ D^{'", D_i, D_j,"'}")),
          colour   = "j") +
     theme_classic() +
-    theme(text = element_text(family = "Arial Unicode MS"),
-          axis.title = element_text(colour = "grey40"),
+    theme(legend.position = "none",
+          text = element_text(family = "Arial Unicode MS"),
+          axis.title.x = element_text(colour = "grey40"),
+          axis.title.y  = element_text(colour = "grey40", angle = 0, 
+                                       vjust = 0.5), 
           axis.line  = element_line(colour = "grey80"),
           axis.text  = element_text(colour = "grey60"),
           axis.ticks = element_line(colour = "grey60"),
-          strip.text = element_text(colour = "grey50"))
+          strip.text = element_text(colour = "grey50"),
+          strip.background = element_rect(colour = "grey80"))
 }
 
 plot_R0_posterior <- function(posterior_df, actual_val, D_i, D_j) {
@@ -406,7 +357,8 @@ plot_par_estimates_by_dataset <- function(fits_list, var_name, actual_val,
                                           x_min, x_max, x_label, D_i, D_j) {
   
   summary_df <- summarise_par(fits_list, var_name) |> 
-    mutate(label_M_i = paste0("i = ", M_i)) 
+    mutate(label_M_i = paste0("i = ", M_i),
+           label_ds  = paste0("dataset = ", dataset)) 
     
   M_i_size   <- length(unique(summary_df$M_i))
   
@@ -414,12 +366,12 @@ plot_par_estimates_by_dataset <- function(fits_list, var_name, actual_val,
     scale_y_discrete(limits = rev)
   
   if(M_i_size == 1) {
-    g         <- g + facet_wrap(~dataset)
+    g         <- g + facet_wrap(~label_ds)
     title_txt <- paste0("'Error bars:' ~ M^{'", M_i, "j'}")
   }
   
   if(M_i_size > 1) {
-    g         <- g + facet_grid(dataset ~ label_M_i)
+    g         <- g + facet_grid(label_ds ~ label_M_i)
     title_txt <- paste0("'Error bars:' ~ M^ij")
   }
   
@@ -441,12 +393,16 @@ plot_par_estimates_by_dataset <- function(fits_list, var_name, actual_val,
          title    = parse(text = title_txt),
          subtitle = parse(text = paste0("'Vertical line:' ~ D^{'", D_i, D_j,"'}")),
          colour   = "j") +
-    theme_pubr() +
-    theme(axis.title = element_text(colour = "grey40"),
+    theme_classic() +
+    theme(legend.position = "none",
+          axis.title.x = element_text(colour = "grey40"),
+          axis.title.y = element_text(colour = "grey40", 
+                                      angle = 0, vjust = 0.5), 
           axis.line  = element_line(colour = "grey80"),
           axis.text  = element_text(colour = "grey60"),
-          axis.ticks = element_line(colour = "grey60"))
-  
+          axis.ticks = element_line(colour = "grey60"),
+          strip.text = element_text(colour = "grey50"),
+          strip.background = element_rect(colour = "grey80"))
 }
 
 summarise_par <- function(fits_list, var_name) {
@@ -674,7 +630,8 @@ plot_incidence_prediction_by_fitting_model <- function(posterior_supralist,
           strip.text.x = element_text(hjust = 0, colour = "grey25"))
 }
 
-prior_posterior_comparison <- function(posterior_df, prior_df, par_name) {
+prior_posterior_comparison <- function(posterior_df, prior_df, par_name,
+                                       sub_txt = "Grey histogram (prior): beta(2, 2)") {
   
   x_lab <- str_remove(par_name, "par_")
   
@@ -694,7 +651,7 @@ prior_posterior_comparison <- function(posterior_df, prior_df, par_name) {
     scale_fill_manual(values = colours_df$colour) +
     labs(x = parse(text = x_lab),
          title    = parse(text = title_txt),
-         subtitle = "Grey histogram (prior): beta(2, 2)",
+         subtitle = sub_txt,
          y = "Count",
          caption = caption_txt) +
     facet_wrap(~label_j) +
@@ -746,7 +703,8 @@ plot_R0_vs_tau <- function(df, ds, x_lims, y_lims) {
 
 plot_scatterplot_R0_vs_tau <- function(df, x_lims, y_lims) {
   
-  df <- df |> mutate(label_Dij = paste0("D^", D_i, D_j))
+  df <- df |> mutate(label_Dij = paste0("D^", D_i, D_j),
+                     label_ds  = paste0("'dataset = ", dataset,"'"))
   
   M_i <- unique(df$M_i)
   
@@ -756,7 +714,7 @@ plot_scatterplot_R0_vs_tau <- function(df, x_lims, y_lims) {
     geom_point(aes(group = id, colour = as.factor(M_j)),
                fill = "white", size = 1, shape = 1) +
     scale_colour_manual(values = colours_df$colour, name = "j") +
-    facet_grid(dataset~label_Dij, labeller = label_parsed) +
+    facet_grid(label_ds~label_Dij, labeller = label_parsed) +
     geom_vline(aes(xintercept = mean_generation_time(D_j, 2, 2)),
                colour = "grey50", linetype = "dashed") +
     geom_hline(yintercept = R0_val, colour = "grey50", linetype = "dotted") +
@@ -772,7 +730,14 @@ plot_scatterplot_R0_vs_tau <- function(df, x_lims, y_lims) {
     theme_classic() +
     theme(text = element_text(family = "Arial Unicode MS"),
           legend.position = "bottom",
-          plot.caption = element_text(hjust = 0))
+          plot.caption = element_text(hjust = 0),
+          axis.title.x = element_text(colour = "grey40"),
+          axis.title.y = element_text(colour = "grey40", angle = 0, 
+                                       vjust = 0.5),
+          axis.text.x   = element_text(colour = "grey60"),
+          axis.text.y   = element_text(colour = "grey60"),
+          axis.line  = element_line(colour = "grey80"),
+          axis.ticks = element_line(colour = "grey60"))
 }
 
 plot_R0_vs_tau_by_fitting_model <- function(df, ds, x_lims, y_lims) {
@@ -942,3 +907,43 @@ summarise_vars <- function(df, ds, var_names) {
   })
 }
 
+plot_prior <- function(df, var_name, dist, lims, bins) {
+  
+  ggplot(prior_df, aes(x)) +
+    geom_histogram(colour = "white", bins = bins, fill = "grey75") +
+    scale_x_continuous(limits = lims) +
+    labs(y = "", x = parse(text = var_name),
+         subtitle = parse(text = dist)) +
+    theme_classic() +
+    theme(text = element_text(family = "Arial Unicode MS"),
+          axis.text.y  = element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.line.y  = element_blank(),
+          axis.line.x  = element_line(colour = "grey85"))
+}
+
+plot_MLE_summary <- function(df) {
+  
+  df <- df |> 
+    mutate(label_Dij = paste0("D^",D_i, D_j),
+           match = ifelse(D_j == M_j, TRUE, FALSE))
+  
+  ggplot(df, aes(x = M_j)) +
+    geom_bar(aes(fill = as.factor(M_j), group = M_j)) +
+    geom_text(aes(label = ..count.., colour = as.factor(M_j)), stat = "count",
+              nudge_y = 1.5) +
+    scale_y_continuous(limits = c(0, 20)) +
+    scale_fill_manual(values = colours_df$colour) +
+    scale_colour_manual(values = colours_df$colour) +
+    facet_wrap(~label_Dij, labeller = label_parsed) +
+    scale_x_continuous(breaks = 1:9) +
+    labs(y = "Number of hits", x = "j",
+         subtitle = parse(text = paste0("'Bars: ' ~ M^{'", M_i, "j'}"))) +
+    theme_classic() +
+    theme(legend.position = "none",
+          axis.line  = element_line(colour = "grey80"),
+          axis.text  = element_text(colour = "grey60"),
+          axis.ticks = element_line(colour = "grey60"),
+          strip.text = element_text(colour = "grey20"),
+          strip.background = element_rect(colour = "grey80"))
+}
