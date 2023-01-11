@@ -5,8 +5,8 @@ This repository contains code for the paper:
 
 [Jair Andrade](https://www.linkedin.com/in/jandraor/) and [Jim
 Duggan](https://ie.linkedin.com/in/jduggan). *Anchoring the mean
-generation time in the SEIR to mitigate biases in $\Re_0$ estimates due
-to uncertainty in the distribution of the epidemiological delays*.
+generation time in the SEIR to mitigate biases in* $\Re_0$ *estimates
+due to uncertainty in the distribution of the epidemiological delays*.
 
 The analysis in this study can be reproduced by executing the files:
 
