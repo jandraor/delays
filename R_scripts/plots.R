@@ -824,7 +824,7 @@ plot_R0_by_fitting_model <- function(df, ds, actual_val, n_row = 1,
               .groups = "drop") |> 
     mutate(label_Dij = paste0("'Vertical line:'~D^", D_ij))
   
-  title_txt <- paste0("'Error bars:' ~ M^ij")
+  title_txt <- paste0("'Error bars:' ~ M^{'", 1, "j'}")
   
   vline_df <- data.frame(actual_val = actual_val,
                          label_Dij  = unique(summary_df$label_Dij))

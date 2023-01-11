@@ -543,6 +543,7 @@ ll_df <- map_df(ll_list, function(dataset_fitlist) {
 ```{r}
 f_A <- plot_R0_by_fitting_model(ll_df, 10, R0_val, lims = c(2, 3),
                                 breaks = c(2, 2.5, 3))
+
 f_B <- plot_incidence_prediction_by_fitting_model(ll_list, y_df, 10, M_i)
 
 g <- f_A/f_B + plot_layout(heights = c(2, 5)) + 
