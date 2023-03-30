@@ -540,17 +540,19 @@ ll_df <- map_df(ll_list, function(dataset_fitlist) {
 ```
 
 
-```{r}
-f_A <- plot_R0_by_fitting_model(ll_df, 10, R0_val, lims = c(2, 3),
-                                breaks = c(2, 2.5, 3))
+```{r fig3}
+f_A <- fig_3A(ll_df, 10, R0_val)
 
-f_B <- plot_incidence_prediction_by_fitting_model(ll_list, y_df, 10, M_i)
+f_B <- plot_incidence_prediction_by_fitting_model(ll_list, y_df, 10, M_i,
+                                                  M_j = c(1, 4),
+                                                  D_j = c(1, 4))
 
-g <- f_A/f_B + plot_layout(heights = c(2, 5)) + 
+g <- guide_area()/f_A/f_B + plot_layout(heights = c(0.25, 2.25, 3.25), 
+                                        guides = "collect") + 
   plot_annotation(tag_levels = 'A') & 
-  theme(plot.tag     = element_text(size = 8))
+  theme(plot.tag = element_text(size = 8))
 
-ggsave("./plots/Fig_03_Pois_inf.pdf", plot = g, height = 7, width = 5,
+ggsave("./plots/Fig_03_Pois_inf.pdf", plot = g, height = 5.75, width = 5,
        device = cairo_pdf)
 ```
 
@@ -962,12 +964,15 @@ plot_scatterplot_R0_vs_tau(ll_subset, c(0,15), c(0, 10))
 
 
 ```{r}
-f_B1 <- plot_R0_vs_tau_by_fitting_model(ll_df, 20, c(0,10), c(0, 6))
+f_B1 <- fig_4B(ll_df, 20, c(0,10), c(0, 6))
 ```
 
 ```{r}
-f_B2 <- plot_R0_vs_tau(ll_df, 20, c(0, 10), c(0, 6))
+f_B2 <- fig_4C(ll_df, 20, c(0, 10), c(0, 6))
+```
 
+
+```{r}
 design <- "
   111##
   11122
@@ -978,17 +983,18 @@ design <- "
 f_B <- (f_B1|f_B2) + plot_layout(design = design)
 ```
 
-
 ```{r}
-f_A <- plot_R0_by_fitting_model(ll_df, 20, R0_val, lims = c(1, 6))
+f_A <- fig_4A(ll_df, 20, R0_val) 
 ```
 
+
 ```{r}
-g <- f_A/f_B + plot_layout(heights = c(2, 5)) + 
+g <- guide_area()/f_A/f_B + plot_layout(heights = c(0.25, 1.75, 4.5),
+                           guides = "collect") + 
   plot_annotation(tag_levels = 'A') & 
   theme(plot.tag     = element_text(size = 8))
 
-ggsave("./plots/Fig_04_Four_unknowns.pdf", plot = g, height = 7, width = 5, 
+ggsave("./plots/Fig_04_Four_unknowns.pdf", plot = g, height = 6.5, width = 5, 
       device = cairo_pdf)
 ```
 
@@ -1325,12 +1331,14 @@ ll_df <- map_df(ll_list, function(dataset_fitlist) {
 
 
 ```{r}
-p1c <- plot_R0_by_fitting_model(ll_df, 20, R0_val, lims = c(2.4, 2.6),
-                                breaks = c(2.4, 2.5, 2.6),
-                                axis_text_x = 5.5,
-                                strip_text_size = 4.1,
-                                bar_width = 0.6) 
+g <- fig_5(ll_df, 20, R0_val) 
 ```
+
+```{r}
+ggsave("./plots/Fig_05_Three_unknowns_alt.pdf", plot = g, height = 2.75, 
+       width = 5, device = cairo_pdf)
+```
+
 
 
 ### Coverage
@@ -1346,23 +1354,6 @@ map_df(ll_list, calculate_coverage, actual_values, inv_gamma_val) |>
 
 ```{r}
 table_coverage(coverage_df)
-```
-
-
-```{r}
-t1 <- table_coverage(coverage_df)
-temp <- t1 |>  gtsave("t1.png", path = "./plots")
-```
-
-```{r}
-p2c <- png::readPNG("./plots/t1.png", native = TRUE)
-
-g <- (p1c|p2c) +
-  plot_annotation(tag_levels = 'A') & 
-  theme(plot.tag     = element_text(size = 8))
-
-ggsave("./plots/Fig_05_Three_unknowns_alt.pdf", plot = g, height = 4.5, 
-       width = 5, device = cairo_pdf)
 ```
 
 <br>

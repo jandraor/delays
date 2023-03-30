@@ -529,13 +529,13 @@ posterior_demo <- posterior_sample |> filter(M_j == 3)
 
 incidence_df <- extract_incidence(posterior_demo, 20)
 
-p1 <- plot_incidence_prediction_by_E_dist(incidence_df, y_df, D_i, D_j, ds)
+p1 <- fig_6A(incidence_df, y_df, D_i, D_j, ds)
 ```
 
 ```{r}
 map2(list(joint_posterior_df2, joint_posterior_df1), c(1, 3), \(pos_df, i) {
   
-  sub_txt <- parse(text = paste0("M^", i, 3, "~'fitted to'", "~D^33"))
+  sub_txt <- parse(text = paste0("M^", i, 3, "~' instance fitted to one '", "~D^33~", "' dataset'"))
   
   pairs_posterior(pos_df, strip_text = 8, axis_text_size = 4.5, bins = 15,
                   text_size = 2, M_j = 3) +
@@ -570,47 +570,16 @@ summary_df <- select(posterior_sample, par_beta, I0, D_i, D_j, M_i, M_j) |>
             lower_bound = quantile(value, 0.025),
             upper_bound = quantile(value, 0.975),
             .groups = "drop") |> 
-  mutate(label_Mi = paste0("'i = ", M_i,"'"),
-         name = case_when(name == "I0" ~ "I[0]",
+  mutate(name = case_when(name == "I0" ~ "I[0]",
                           name == "R0" ~ "\u211c[0]"))
 
-
-vline_df <- data.frame(name = c("I[0]", "\u211c[0]"), val = c(1, R0_val))
-
-p3 <- ggplot(summary_df, aes(mean, as.factor(M_j))) +
-  geom_errorbar(aes(xmin = lower_bound, xmax = upper_bound, 
-                    colour = as.factor(M_j), linetype = as.factor(M_i)),
-                    width = 0.8) +
-  scale_y_discrete(limits = rev) +
-  scale_colour_manual(values = colours_df$colour) +
-  scale_linetype_manual(values = c("solid", "twodash")) +
-  geom_vline(data = vline_df, aes(xintercept = val), linetype = "twodash", 
-             colour = colours_df[D_j, "colour"]) +
-  facet_grid(label_Mi~name, scales = "free", labeller = label_parsed) +
-  labs(x = "Value", y = "j",
-       title = parse(text = paste0("'Error bars:'~M^ij")),
-       subtitle = parse(text = paste0("'Vertical line:'~D^33"))) +
-  theme_classic() +
-  theme(text = element_text(family = "Arial Unicode MS"),
-        legend.position = "none",
-        strip.background = element_rect(fill = "white",
-                                          colour = "grey80"),
-        axis.text     = element_text(colour = "grey60"),
-        axis.ticks    = element_line(colour = "grey60"),
-        axis.line     = element_line(colour = "grey80"),
-        plot.title    = element_text(colour = "grey10", size = 9,
-                                     margin = margin(0,0,0,0, "cm")),
-        plot.subtitle = element_text(colour = "grey10", size = 9,
-                                     margin = margin(0,0,0,0, "cm")),
-        axis.title.y = element_text(colour = "grey40", angle = 0, 
-                                       vjust = 0.5),
-        axis.title.x = element_text(colour = "grey40"))
+p3 <- fig_6B(summary_df, R0_val)
 ```
 
 
 ```{r}
 g <- wrap_plots(p1, p3, p2) + 
-  plot_layout(heights = c(1.5, 2, 3.5)) + 
+  plot_layout(heights = c(1.5, 2.2, 3.3)) + 
   plot_annotation(tag_levels = 'A') & 
   theme(plot.tag = element_text(size = 8))
 

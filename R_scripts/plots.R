@@ -5,6 +5,8 @@ library(patchwork)
 library(scales)
 library(viridis)
 
+source("./R_scripts/plots_paper.R")
+
 colours_df <- data.frame(order = 1:4, 
                          colour = c("#C7D9F4", "#304460", "#BCA7D2", "#4C808A"))
 
@@ -17,39 +19,26 @@ plot_latent_incidence <- function(x_df) {
   comparison_df <- x_df |> 
     mutate(label_i = case_when(label_i == "i = 1" ~ "i = 3",
                                label_i == "i = 3" ~ "i = 1"))
+  
+  labels_df <- data.frame(j = rep(1:4,2), 
+                          time = rep(c(38, 40), each = 4), 
+                          x = c(380, 430, 480, 530, 380, 430, 480, 530),
+                          label_i = rep(c("i = 1", "i = 3"), each = 4)) |> 
+    mutate(label = str_glue("j = {j}"))
+  
+  caption <- paste("i: Number of stages in the exposed class (E)", 
+                   "j: Number of stages in the infectious class (I)",
+                   sep = "\n")
  
   ggplot(x_df, aes(time, x)) +
-    geom_line(data = comparison_df, aes(linetype = E_order), colour = "grey90",
-              alpha = 0.75) +
-    geom_line(aes(colour = I_order, linetype = E_order)) +
-    facet_grid(label_j ~ label_i) +
+    geom_line(aes(colour = I_order, linetype = E_order), alpha = 0.95) +
+    geom_text(data = labels_df, aes(label = label, colour = as.factor(j)), 
+              size = 3) +
+    facet_wrap(~ label_i, ncol = 1) +
     scale_colour_manual(values = colours_df$colour) +
     scale_linetype_manual(values = c("solid", "longdash")) +
-    labs(y = "Incidence rate [New cases/day]", x = "Day") +
-    theme_classic() +
-    theme(legend.position = "none",
-          strip.background = element_rect(colour = "grey80"),
-          axis.title = element_text(colour = "grey40"),
-          axis.line  = element_line(colour = "grey80"),
-          axis.text  = element_text(colour = "grey60"),
-          axis.ticks = element_line(colour = "grey60"),)
-}
-
-plot_meas_incidence_by_overdispersion <- function(df) {
-  
-  M_i <- unique(df$E_order)
-  
-  subtitle_txt <- parse(text = paste0("'Time-series:' ~ D^{'", M_i, "j'}"))
-  
-  df <- df |> mutate(label_j = paste0("'j = '~", I_order)) 
-  
-  ggplot(df, aes(time, y)) +
-    geom_line(aes(group = dataset, colour = I_order, alpha = highlight)) +
-    scale_colour_manual(values = colours_df$colour) +
-    scale_alpha_manual(values = c(0.05, 1)) +
-    facet_grid(label_j~disp, labeller = label_parsed) +
-    labs(y = "Measured incidence [New cases/day]", x = "Day",
-         subtitle = parse(text = subtitle_txt)) +
+    labs(y = "Incidence rate [New cases/day]", x = "Day",
+         caption = caption) +
     theme_classic() +
     theme(legend.position = "none",
           strip.background = element_rect(colour = "grey80"),
@@ -57,7 +46,53 @@ plot_meas_incidence_by_overdispersion <- function(df) {
           axis.line  = element_line(colour = "grey80"),
           axis.text  = element_text(colour = "grey60"),
           axis.ticks = element_line(colour = "grey60"),
-          plot.subtitle = element_text(colour = "grey45"))
+          plot.caption = element_text(hjust = 0, colour = "grey35", size = 8))
+}
+
+plot_meas_incidence_by_overdispersion <- function(df) {
+  
+  M_i <- unique(df$E_order)
+  
+  subtitle_txt <- "Points: Synthetic data"
+  
+  df <- df |> filter(I_order %in% c(1, 4)) |> 
+    mutate(label_j = str_glue("'j = {I_order}'")) 
+  
+  points_df <- df
+  
+  caption <- paste("The basis for this data stems from simulating SEIR instances with", 
+                   "one stage in the exposed class (E) and j stages in the infectious class (I).",
+                   sep = "\n")
+  
+  label_df <- data.frame(label_j    = str_glue("'j = {c(1, 4)}'"), 
+                         I_order    = c(1, 4),
+                         label_txt  = str_glue("j = {c(1, 4)}"),
+                         time = c(45, 40),
+                         y    = c(350, 400))
+  
+  ggplot(points_df, aes(time, y = y)) +
+    geom_point(aes(group = dataset, colour = I_order), size = 1, shape = 1) +
+    geom_line(data = df, aes(x = time, y = x, colour = I_order), alpha = 0.2) +
+    geom_text(data = label_df, aes(label = label_txt, 
+                                   colour = as.factor(I_order))) +
+    scale_colour_manual(values = colours_df$colour[c(1, 4)]) +
+    scale_alpha_manual(values = c(0.05, 1)) +
+    facet_grid(label_j~disp, labeller = label_parsed) +
+    labs(y = "Measured incidence [New cases/day]", x = "Day",
+         subtitle = subtitle_txt,
+         caption = caption,
+          ) +
+    theme_classic() +
+    theme(legend.position = "none",
+          strip.background = element_rect(colour = "grey80"),
+          axis.title = element_text(colour = "grey40"),
+          axis.line  = element_line(colour = "grey80"),
+          axis.text  = element_text(colour = "grey60"),
+          axis.ticks = element_line(colour = "grey60"),
+          plot.subtitle = element_text(colour = "grey45"),
+          strip.background.y = element_blank(),
+          strip.text.y = element_blank(),
+          plot.caption = element_text(hjust = 0, colour = "grey35", size = 8))
 }
 
 plot_hist_mase <- function(posterior_sample, y_df, lims = c(0, 0.5)) {
@@ -593,7 +628,9 @@ plot_incidence_prediction_by_E_dist <- function(incidence_df, y_df, D_i, D_j, ds
 }
 
 plot_incidence_prediction_by_fitting_model <- function(posterior_supralist, 
-                                                       y_df, ds, M_i) {
+                                                       y_df, ds, M_i,
+                                                       M_j = NULL,
+                                                       D_j = NULL) {
   
   incidence_df <- map_df(posterior_supralist, \(posterior_list) {
     
@@ -605,19 +642,42 @@ plot_incidence_prediction_by_fitting_model <- function(posterior_supralist,
   }) |> mutate(label_Dij = paste0("'Points:'~D^",D_i, D_j),
                label_Mij = paste0("'j = ", M_j,"'"))
   
-  subtitle_txt <- paste0("'Lines:' ~ M^{'", M_i, "j'}")
+  title_txt <- paste0("'Lines :' ~ M^{'", M_i, "j'}")
+  sub_txt   <- paste0("'Points:' ~ D^{'", M_i, "j'}")
   
   epi_df <- y_df |> filter(dataset == ds,
                            time %in% c(1, seq(4, 48, 4))) |> 
-    mutate(label_Dij = paste0("'Points:'~D^", E_order, I_order))
+    mutate(label_Dij = paste0("'Points:'~D^", E_order, I_order),
+           D_j       = I_order)
+  
+  if(!is.null(M_j)) incidence_df <- incidence_df |> filter(M_j %in% .env$M_j)
+  
+  if(!is.null(D_j)){
+    incidence_df <- incidence_df |> filter(D_j %in% .env$D_j)
+    epi_df       <- epi_df |> filter(I_order %in% .env$D_j)
+  } 
+  
+  label_D <- data.frame(time = 40, value = 350, D_j = c(1, 4)) |> 
+    mutate(txt       = str_glue("D^1{D_j}"),
+           label_Dij = str_glue("'Points:'~D^1{D_j}"))
+  
+  label_M <- data.frame(time = 40, value = 450, M_j = c(1, 4)) |> 
+    mutate(txt       = str_glue("M^1{M_j}"),
+           label_Mij = str_glue("'j = {M_j}'"))
+                        
   
   ggplot(incidence_df, aes(time, value)) +
     geom_line(aes(group = iter, colour = as.factor(M_j)), alpha = 0.1) +
-    geom_point(data = epi_df, aes(y = x, colour = label_Dij), size = 1) +
-    scale_colour_manual(values = c(colours_df$colour, colours_df$colour)) +
-    facet_grid(label_Mij ~label_Dij, labeller = label_parsed) +
-    labs(y = "x [Cases/day]", x = "Days",
-         subtitle = parse(text = subtitle_txt)) +
+    geom_point(data = epi_df, aes(y = x, colour = as.factor(D_j)), size = 1) +
+    geom_text(data = label_M, aes(label = txt, colour = as.factor(M_j)), 
+              parse = TRUE, size = 3) +
+    geom_text(data = label_D, aes(label = txt, colour = as.factor(D_j)), 
+              parse = TRUE, size = 3) +
+    scale_colour_manual(values = c(colours_df$colour[M_j], colours_df$colour[D_j])) +
+    facet_grid(label_Dij ~ label_Mij, labeller = label_parsed) +
+    labs(y = "Latent incidence (x)", x = "Days",
+         title = parse(text = title_txt),
+         subtitle = parse(text = sub_txt)) +
     theme_classic() +
     theme(legend.position = "none",
           axis.title.x = element_text(colour = "grey40"),
@@ -625,9 +685,11 @@ plot_incidence_prediction_by_fitting_model <- function(posterior_supralist,
           axis.line    = element_line(colour = "grey80"),
           axis.text    = element_text(colour = "grey60"),
           axis.ticks = element_line(colour = "grey60"),
-          strip.background.x  = element_rect(colour = "white"),
-          strip.background.y  = element_rect(colour = "grey80"),
-          strip.text.x = element_text(hjust = 0, colour = "grey25"))
+          strip.background = element_blank(),
+          strip.text = element_blank(),
+          plot.subtitle = element_text(colour = "grey35", size = 10),
+          plot.title    = element_text(colour = "grey35", size = 10,
+                                       margin = margin(0, 0, 0, 0, "cm")))
 }
 
 prior_posterior_comparison <- function(posterior_df, prior_df, par_name,
@@ -665,40 +727,6 @@ prior_posterior_comparison <- function(posterior_df, prior_df, par_name,
           plot.title = element_text(colour = "grey40"),
           plot.subtitle = element_text(colour = "grey40"),
           plot.caption  = element_text(colour = "grey40"))
-}
-
-plot_R0_vs_tau <- function(df, ds, x_lims, y_lims) {
-  
-  df <- df |> filter(dataset == ds, D_j == 2) |> 
-    mutate(label_Dij = paste0("D^", D_i, D_j))
-  
-  M_i          <- unique(df$M_i)
-  subtitle_txt <- title_txt <- paste0("'Points:' ~ M^{'", M_i, "j'}")
-  
-  ggplot(df, aes(tau, R0)) +
-    geom_point(aes(group = id, colour = as.factor(M_j)),
-               fill = "white", size = 1, shape = 1, alpha = 0.5) +
-    scale_colour_manual(values = colours_df$colour, name = "j") +
-    facet_wrap(~label_Dij, labeller = label_parsed, ncol = 4) +
-    geom_vline(aes(xintercept = mean_generation_time(D_j, 2, 2)),
-               colour = "grey50", linetype = "dashed") +
-    geom_hline(yintercept = R0_val, colour = "grey50", linetype = "dotted") +
-    scale_x_continuous(limits = x_lims, breaks = c(0, 5, 10)) +
-    scale_y_continuous(limits = y_lims) +
-    labs(x = bquote(tau), y = parse(text = "\u211c[0]"),
-         subtitle = parse(text = subtitle_txt)) +
-    guides(alpha = "none") +
-    theme_classic() +
-    theme(text = element_text(family = "Arial Unicode MS"),
-          legend.position = "none",
-          axis.line  = element_line(colour = "grey80"),
-          axis.ticks = element_line(colour = "grey60"),
-          axis.title.x  = element_text(colour = "grey40"),
-          axis.title.y  = element_text(colour = "grey40", angle = 0, 
-                                       vjust = 0.5),
-          strip.background = element_rect(colour = "grey95"),
-          axis.text.x   = element_text(colour = "grey60"),
-          axis.text.y   = element_text(colour = "grey60"))
 }
 
 plot_scatterplot_R0_vs_tau <- function(df, x_lims, y_lims) {
@@ -740,46 +768,6 @@ plot_scatterplot_R0_vs_tau <- function(df, x_lims, y_lims) {
           axis.ticks = element_line(colour = "grey60"))
 }
 
-plot_R0_vs_tau_by_fitting_model <- function(df, ds, x_lims, y_lims) {
-  
-  subset_df <- df |> filter(dataset == ds) |> 
-    mutate(label_Mj = paste0("'j = ", M_j, "'"),
-           label_Dij = paste0("D^", D_i, D_j)) |> 
-    group_by(M_j, D_j) |> 
-    slice_sample(n = 250)
-  
-  subtitle_txt <- title_txt <- paste0("'Points:' ~ M^{'", M_i, "j'}")
-  
-  ggplot(subset_df, aes(tau, R0)) +
-    geom_point(aes(group = id, colour = as.factor(M_j)),
-               fill = "white", size = 1.5, shape = 1, alpha = 0.4) +
-    scale_colour_manual(values = colours_df$colour, name = "j") +
-    facet_grid(label_Mj~label_Dij, labeller = label_parsed) +
-    geom_vline(aes(xintercept = mean_generation_time(D_j, 2, 2)),
-               colour = "grey50", linetype = "dashed") +
-    geom_hline(yintercept = R0_val, colour = "grey50", linetype = "dotted") +
-    scale_x_continuous(limits = x_lims, breaks = c(0, 5, 10)) +
-    scale_y_continuous(limits = y_lims, breaks = c(0, 3, 6)) +
-    labs(x = parse(text = "'Mean generation time ('~tau~')'"), 
-         y = parse(text = "\u211c[0]"),
-         caption = paste("Dashed line: Data's generation time",
-                         "Dotted line: Data's basic reproduction number",
-                         sep = "\n"),
-         subtitle = parse(text = subtitle_txt)) +
-    theme_classic() +
-    theme(text = element_text(family = "Arial Unicode MS"),
-          legend.position = "none",
-          plot.caption = element_text(hjust = 0, size = 6, colour = "grey35"),
-          axis.title.x  = element_text(colour = "grey40"),
-          axis.title.y  = element_text(colour = "grey40", angle = 0, 
-                                       vjust = 0.5), 
-          axis.line     = element_line(colour = "grey80"),
-          axis.text.x   = element_text(colour = "grey60", size = 6.5),
-          axis.text.y   = element_text(colour = "grey60", size = 9),
-          axis.ticks    = element_line(colour = "grey60"),
-          strip.background = element_rect(colour = "grey95"))
-}
-
 plot_R0_vs_Mj <- function(df, R0_val, inv_sigma, inv_gamma, y_lims) {
   
   M_i <- unique(df$M_i)
@@ -817,46 +805,55 @@ plot_R0_by_fitting_model <- function(df, ds, actual_val, n_row = 1,
                                      strip_text_size = 6, bar_width = 0.8) {
   
   summary_df <- df |> filter(dataset == ds) |> 
-    mutate(D_ij = paste0(D_i, D_j)) |> group_by(D_ij, M_i, M_j) |> 
+    mutate(D_ij = paste0(D_i, D_j)) |> group_by(D_ij, D_j, M_i, M_j) |> 
     summarise(mean_R0     = mean(R0),
               lower_bound = quantile(R0, 0.025),
               upper_bound = quantile(R0, 0.975),
               .groups = "drop") |> 
     mutate(label_Dij = paste0("'Vertical line:'~D^", D_ij))
   
-  title_txt <- paste0("'Error bars:' ~ M^{'", 1, "j'}")
+  title_txt <- paste0("'Error bars: Estimates from' ~ M^{'", 1, "j'}~'fitting instances'")
   
   vline_df <- data.frame(actual_val = actual_val,
-                         label_Dij  = unique(summary_df$label_Dij))
+                         label_Dij  = unique(summary_df$label_Dij),
+                         D_j        = unique(summary_df$D_j))
   
+  
+  cap_txt <- paste("Vertical line: Actual value \t \t j: # of stages in the infectious class (I)", 
+                   "D\U2071\U02B2: Data generator's distribution \t M\U2071\U02B2: Fitting model's distribution",
+                   sep = "\n")
   
   ggplot(summary_df, aes(x = mean_R0, y = as.factor(M_j))) +
     scale_y_discrete(limits = rev) +
     scale_x_continuous(breaks = breaks, limits = lims) +
     geom_errorbar(aes(xmin = lower_bound, xmax = upper_bound, 
                       colour = as.factor(M_j)), alpha = 0.75, 
-                  width = bar_width) + 
-    facet_wrap(~label_Dij, nrow = n_row, labeller = label_parsed) +
+                  width = bar_width) +
+  facet_wrap(~label_Dij, nrow = n_row, labeller = label_parsed) +
     geom_vline(data = vline_df, aes(xintercept = actual_val, 
-                                    colour = as.factor(label_Dij)), 
-               linetype = "dashed") +
+                                    colour = as.factor(D_j)),
+               show.legend = FALSE, linetype = "dashed") +
     scale_colour_manual(values = c(colours_df$colour, colours_df$colour)) +
     labs(x = parse(text = "\u211c[0]"),
          y = "j", 
          subtitle    = parse(text = title_txt),
-         colour   = "j") +
+         colour   = "j",
+         caption = cap_txt) +
     theme_classic() +
     theme(text = element_text(family = "Arial Unicode MS"),
-          legend.position = "none",
+          legend.position = "top",
+          legend.margin = margin(0, 0, 0, 0, "cm"),
           axis.title.x = element_text(colour = "grey40"),
           axis.title.y = element_text(colour = "grey40", angle = 0, 
-                                       vjust = 0.5),
+                                      vjust = 0.5),
           axis.line  = element_line(colour = "grey80"),
           axis.text  = element_text(colour = "grey60", size = axis_text_x),
           axis.ticks = element_line(colour = "grey60"),
           strip.background = element_rect(colour = "white"),
           strip.text = element_text(hjust = 0, colour = "grey35",
-                                    size = strip_text_size ))
+                                    size = strip_text_size),
+          plot.caption = element_text(hjust = 0, colour = "grey50", size = 8.5),
+          plot.subtitle = element_text(colour = "grey35"))
 }
 
 plot_vars_by_fitting_model <- function(df, ds, var_names) {

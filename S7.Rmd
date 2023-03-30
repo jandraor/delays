@@ -189,8 +189,7 @@ plot_posterior_pred_checks(pred_incidence, Cumberland_df)
 
 
 ```{r}
-p1 <- plot_posterior_pred_checks(pred_incidence2, Cumberland_df,
-                                 "'Line, ribbon & error bars:'")
+p1 <- fig_7_main(pred_incidence2, Cumberland_df)
 ```
 
 ### Joint posterior distribution
@@ -219,29 +218,11 @@ summary_df <- alt_df |> group_by(M_j) |>
             upper_bound = quantile(R0, 0.975),
             .groups = "drop")
 
-p2 <- ggplot(summary_df, aes(x = mean_R0, y = as.factor(M_j))) +
-  scale_x_continuous(limits = c(1.8, 2.2), n.breaks = 3) +
-  scale_y_discrete(limits = rev) +
-  geom_errorbar(aes(xmin = lower_bound, xmax = upper_bound, 
-                      colour = as.factor(M_j)), alpha = 0.75, 
-                  width = 0.5) +
-  scale_colour_manual(values = c(colours_df$colour, colours_df$colour)) +
-  labs(x = parse(text = "\u211c[0]"),
-       y = "j") +
-  theme_classic() +
-    theme(text = element_text(family = "Arial Unicode MS"),
-          legend.position = "none",
-          axis.text  = element_text(colour = "grey60", size = 4.5),
-          axis.line  = element_line(colour = "grey80"),
-          axis.title.x = element_text(colour = "grey40", size = 6),
-          axis.title.y = element_text(colour = "grey40", angle = 0, 
-                                       vjust = 0.5, size = 6),
-           axis.ticks = element_line(colour = "grey60"),
-          plot.background = element_rect(colour = "grey70"))
+p2 <- fig_7_inset(summary_df)
 ```
 
 ```{r}
-plot_Cumberland <- p1 + inset_element(p2, left = 0.38, bottom = 0.7, right = 0.58, top = 0.99)
+plot_Cumberland <- p1 + inset_element(p2, left = 0.29, bottom = 0.58, right = 0.64, top = 0.99)
 
 ggsave("./plots/Fig_07_Cumberland.pdf", plot_Cumberland , height = 4, 
        width = 5,
