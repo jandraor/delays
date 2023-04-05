@@ -8,13 +8,13 @@ output:
     number_sections: true
 ---
 
-In this appendix, we illustrate the process undertaken to infer the basic 
-reproduction number ($\Re_0$) of influenza during the second wave of the 
-**1918 pandemic** in Cumberland (Maryland). Specifically,  we fit four model 
-candidates of the **alternative parameterisation** of the **SEIR** to incidence 
-data that yield almost identical estimates of $\Re_0$  regardless of the 
-distribution of the infectious period. Furthermore, we compare the results of 
-the alternative parameterisation to those of the *traditional* one.
+In this appendix, we illustrate the procedure to infer the basic reproduction 
+number ($\Re_0$) of influenza during the second wave of the **1918 pandemic** in
+Cumberland (Maryland). Specifically, we fit four model candidates from the
+**alternative parameterisation** to incidence data. The inference process yields
+almost identical $\Re_0$ estimates, regardless of the infectious period
+distribution. Furthermore, we compare the results of the alternative 
+parameterisation to those of the *traditional* one.
 
 
 ```{r setup, include=FALSE}
@@ -61,14 +61,14 @@ plot_epi_bars(Cumberland_df)
 
 We employ four candidates per parameterisation (traditional and alternative). 
 On the one hand, the traditional parameterisation refers to the approach of 
-fixing the mean of the latent and infectious period to values obtained from the
-literature, irrespective of distribution for the epidemiological delays. On the 
-other hand, the proposed alternative parameterisation refers to the special
-emphasis placed on mean generation time of the **SEIR**, while flexibilising 
-the mean and distribution of the epidemiological delays. Namely, the 
-epidemiological delays can take any mean or shape provided that as a whole they
-conform to the observed mean generation time. Furthermore, following the results
-shown in **S4** and **S5**, for all candidates, we assume an 
+fixing the mean of the epidemiological delays (latent and infectious periods) to
+values obtained from the literature, irrespective of their particular 
+distribution. On the other hand, the proposed alternative parameterisation 
+refers to the special emphasis placed on mean generation time of the **SEIR**, 
+while flexibilising the mean and distribution of the epidemiological delays.
+Namely, the epidemiological delays can take any mean or shape provided that as a
+whole conform to the observed mean generation time. Furthermore, following the 
+results shown in **S4** and **S5**, for all candidates, we assume an 
 exponentially-distributed latent period ($SE^1I^jR$), where $j = \{1,2,3,4\}$.
 
 ## Prior distribution

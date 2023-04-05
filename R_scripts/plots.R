@@ -95,6 +95,31 @@ plot_meas_incidence_by_overdispersion <- function(df) {
           plot.caption = element_text(hjust = 0, colour = "grey35", size = 8))
 }
 
+plot_y_by_overdispersion <- function(df) {
+  
+  M_i <- unique(df$E_order)
+  
+  subtitle_txt <- parse(text = paste0("'Time-series:' ~ D^{'", M_i, "j'}"))
+  
+  df <- df |> mutate(label_j = paste0("'j = '~", I_order)) 
+  
+  ggplot(df, aes(time, y)) +
+    geom_line(aes(group = dataset, colour = I_order, alpha = highlight)) +
+    scale_colour_manual(values = colours_df$colour) +
+    scale_alpha_manual(values = c(0.05, 1)) +
+    facet_grid(label_j~disp, labeller = label_parsed) +
+    labs(y = "Measured incidence [New cases/day]", x = "Day",
+         subtitle = parse(text = subtitle_txt)) +
+    theme_classic() +
+    theme(legend.position = "none",
+          strip.background = element_rect(colour = "grey80"),
+          axis.title = element_text(colour = "grey40"),
+          axis.line  = element_line(colour = "grey80"),
+          axis.text  = element_text(colour = "grey60"),
+          axis.ticks = element_line(colour = "grey60"),
+          plot.subtitle = element_text(colour = "grey45"))
+}
+
 plot_hist_mase <- function(posterior_sample, y_df, lims = c(0, 0.5)) {
   
   actual_E <- unique(posterior_sample$D_i)
@@ -323,8 +348,7 @@ plot_R0_comparison_by_dataset <- function(fits_list, actual_val, x_min, x_max,
   g <- ggplot(summary_df, aes(x = mean_R0, y = as.factor(M_j))) +
     scale_y_discrete(limits = rev) +
     geom_errorbar(aes(xmin = lower_bound, xmax = upper_bound, 
-                      colour = as.factor(M_j)), alpha = 0.75,
-                  linetype = "dotted")
+                      colour = as.factor(M_j)), alpha = 0.5)
   
   if(M_i_size == 1) {
     g         <- g + facet_wrap(~label_ds)
@@ -339,7 +363,7 @@ plot_R0_comparison_by_dataset <- function(fits_list, actual_val, x_min, x_max,
   g + scale_colour_manual(values = colours_df$colour) +
     geom_text(aes(label = percent(mean_R0/actual_val - 1, accuracy = 1),
                   colour = as.factor(M_j)),
-              size = text_size, show.legend = FALSE) +
+              size = text_size, show.legend = FALSE, nudge_y = 0.25) +
     scale_x_continuous(limits = c(x_min, x_max)) +
     geom_vline(xintercept = actual_val, linetype = "dashed", 
                colour = colours_df[D_j, "colour"]) +
@@ -414,13 +438,12 @@ plot_par_estimates_by_dataset <- function(fits_list, var_name, actual_val,
       geom_vline(xintercept = actual_val, linetype = "dashed", 
                  colour = colours_df[D_j, "colour"]) +
     geom_errorbar(aes(xmin = lower_bound, xmax = upper_bound, 
-                      colour = as.factor(M_j)), alpha = 0.6,
-                  position = position_dodge(width = 1),
-                  linetype = "dotted") +
+                      colour = as.factor(M_j)), alpha = 0.5,
+                  position = position_dodge(width = 1)) +
     scale_colour_manual(values = colours_df$colour) +
     geom_text(aes(label = percent(mean/actual_val - 1, accuracy = 1),
                   colour = as.factor(M_j)),
-              position = position_dodge(width = 1.1),
+              nudge_y = 0.25,
               size = 4, show.legend = FALSE) +
     scale_x_continuous(limits = c(x_min, x_max)) +
     labs(x        = parse(text = x_label),

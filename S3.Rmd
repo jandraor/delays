@@ -9,9 +9,9 @@ output:
 ---
 
 This appendix illustrates the process of fitting various parameterisations
-of the $SE^1I^jR$ model ($M^{1j}$) to **overdispersed $D^{1j}$** incidence 
+of the $SE^1I^jR$ model ($M^{1j}$) to **low-fidelity $D^{1j}$** incidence 
 reports. We mean by *parameterisation* the decision of categorising parameters 
-as either *unknown* or *assumed*. For unknown parameters, we construct prior 
+as either *unknown* or *assumed*. For the unknown parameters, we construct prior 
 distributions, which will be eventually updated in light of the data via
 HMC sampling, resulting in a posterior distribution. On the other hand, assumed 
 parameters are fixed at their true values.
@@ -75,13 +75,13 @@ R0_bounds <- c(1, 4)
 
 # Three-unknown
 
-As the name suggests, for candidates from this parameterisation, we assume that
-two parameters and one initial condition are unknown: $\beta$, $\rho$, and 
-$I^1_0$. Each candidate is coupled with the appropriate likelihood function. In
-this case, given that the data is overdispersed, such likelihood function 
-corresponds to the Negative Binomial distribution. The selection of this 
-function entails the estimation of an additional parameter, the degree of 
-concentration ($\phi^{-1}$) around the incidence's expected value.
+For candidates from this parameterisation, we assume that two parameters and one
+initial condition are unknown: $\beta$, $\rho$, and $I^1_0$. Each candidate is 
+coupled with the appropriate likelihood function. In this case, given that the 
+data is overdispersed, such likelihood function corresponds to the Negative 
+Binomial distribution. The selection of this function entails the estimation of
+an additional parameter, the degree of concentration ($\phi^{-1}$) around the 
+incidence's expected value.
 
 ## Prior distributions {#link1}
 
@@ -124,9 +124,9 @@ plot_prior(prior_df, "phi^{-1}", "phi^{-1}~'~ exp(5)'", c(0, 1.5), 25)
 
 ## Posterior distributions
 
-We stratify inference results by the distribution of the infectious period that
-produced the observed incidences. For instance, $D_{11}$ implies that the fitted
-incidence stems from an SEIR with an exponential-distributed infectious period.
+We stratify inference results by the infectious period distribution that
+produced the observed incidences. For instance, $D_{11}$ implies that candidate
+models fitted incidence reports that stem from the $SE^1I^1R$.
 
 ```{r}
 root_fldr  <- "./Saved_objects/Inference/Synthetic_data/SEIR/Case_2/Three_params"
@@ -174,7 +174,7 @@ mean absolute scaled error (MASE). This quantity is a measure of the accuracy of
 forecasts, well-suited for time-series. Therefore, we employ the MASE to compare
 each of the 4000 simulated latent incidences against its true counterpart ($x$)
 and observed incidence ($y$). By simulated latent incidences, we refer to the 
-process of plugging a posterior distribution (samples) into an ODE model to
+process of plugging the samples of a posterior distribution into an ODE model to
 obtain incidence trajectories via simulation. We summarise the results via
 histograms in the plot below. The left column (of panels) contains the 
 comparison between simulated and actual latent incidences. The right column of 
@@ -531,7 +531,7 @@ MLE_df <- MLE_choice(ll_df) |>
 plot_MLE_summary(MLE_df)
 ```
 
-# Four-unknown
+# Four-unknown parameterisation
 
 In this parameterisation, for each candidate, we assume one additional unknown
 parameter: the recovery rate ($\gamma$). Furthermore, all candidates are coupled
@@ -638,7 +638,7 @@ plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
 
 For this parameter, we opt for a different visualisation. Specifically, for 
 each model candidate fitting a particular $D^{11}$ incidence report, we 
-compare the the marginal posterior distribution against the prior
+compare the marginal posterior distribution against the prior
 distribution via histograms. These plots show that the data does little to 
 inform the prior distribution as it can be seen that both distributions agree
 to a large extent along the parameter space. For this reason, we claim that
@@ -790,6 +790,7 @@ plot_par_estimates_by_dataset(posterior_subset, "par_rho", rho_val,
                               x_min = 0, x_max = 1, x_label = "rho",
                               D_i, D_j)
 ```
+
 ##### Initial number of infectious individuals ($I_0$)
 
 ```{r}
@@ -920,36 +921,36 @@ ll_subset <- ll_df |> filter(dataset %in% c(1, 10))
 plot_scatterplot_R0_vs_tau(ll_subset, c(0, 50), c(0, 25))
 ```
 
-# Three-unknown (Alternative)
+# Three-unknown parameterisation (Alternative)
 
 The *alternative parameterisation* refers to the algebraic manipulation of the
 $SE^iI^jR$ framework so as to obtain a set equations wherein the basic 
 reproduction number ($\Re_0$) and the mean generation time ($\tau$) are 
 explicit parameters of the model. In doing so, $\beta$ and $\gamma$ become
 functions of other variables rather than parameters. In these parameterisation,
-we assume as unknown the basic reproduction number (its inverse), the reporting
-rate ($\rho$) and initial number of infectious individuals ($I^1_0$). All of the 
-other parameters are fixed to their true values.
-
-\begin{equation}
-  \begin{aligned}
-    \dot{S_t}   &= -\frac{\beta(\tau, \sigma, \Re_0, i, j) S_t \sum^i_{k=1} I^k_t}{N}\\
-    \dot{E^1_t} &= \frac{\beta(\tau, \sigma, \Re_0, i, j) S_t \sum^i_{k=1} I^k_t}{N} - i\sigma E^1_t \\
-    \dot{E^2_t} &= i\sigma E^1_t - i\sigma E^2_t \\
-    \vdots \\
-    \dot{E^i_t} &= i \sigma E^{i - 1}_t - i \sigma E^i_t \\
-    \dot{I^1_t} &= i \sigma E^{i - j}_t - \gamma(\beta, \Re_0)I^1_t \\
-    \dot{I^2_t} &= j \gamma(\beta, \Re_0) I^{1 - j}_t - \gamma(\beta, \Re_0) I^2_t  \\
-    \vdots \\
-    \dot{I^j_t} &= j \gamma(\beta, \Re_0) I^{j - 1}_t - j \gamma(\beta, \Re_0) I^{j}_t \\
-    \dot{R_t}   &= j \gamma(\beta, \Re_0)I^j_t
-  \end{aligned}
-\end{equation}
+we assume the basic reproduction number's inverse, the reporting
+rate ($\rho$) and initial number of infectious individuals ($I^1_0$) as 
+unknowns. The remaining parameters are fixed to their true values.
 
 \begin{equation}
   \begin{aligned}
     \beta       &= \frac{2 j (\tau - \sigma^{-1})}{\Re_0^{-1} (j + 1)}\\
     \gamma      &= \beta \Re_0^{-1}
+  \end{aligned}
+\end{equation}
+
+\begin{equation}
+  \begin{aligned}
+    \dot{S_t}   &= -\frac{\beta S_t \sum^i_{k=1} I^k_t}{N}\\
+    \dot{E^1_t} &= \frac{\beta S_t \sum^i_{k=1} I^k_t}{N} - i\sigma E^1_t \\
+    \dot{E^2_t} &= i\sigma E^1_t - i\sigma E^2_t \\
+    \vdots \\
+    \dot{E^i_t} &= i \sigma E^{i - 1}_t - i \sigma E^i_t \\
+    \dot{I^1_t} &= i \sigma E^{i}_t - \gamma I^1_t \\
+    \dot{I^2_t} &= j \gamma I^{1}_t - \gamma I^2_t  \\
+    \vdots \\
+    \dot{I^j_t} &= j \gamma I^{j - 1}_t - j \gamma I^{j}_t \\
+    \dot{R_t}   &= j \gamma I^j_t
   \end{aligned}
 \end{equation}
 
@@ -972,10 +973,10 @@ identical to those described [here](#link1).
 ### The inverse of the basic reproduction number ($\Re_0^{-1}$)
 
 Since model candidates are fitting outbreak-like incidence data, it is warranted
-to assume that the basic reproduction number is higher than one ($\Re_0^{-1}$).
-This observation implies that the magnitude of  its inverse is below that 
-threshold. Consequently, we formulate a prior that is consistent with such a 
-constraint.
+to assume that the basic reproduction number is higher than one ($\Re_0 > 1$).
+This observation implies that the magnitude of its inverse ($\Re_0^{-1}$) 
+between 0 and 1. Consequently, we formulate a prior that is consistent with
+such a constraint.
 
 ```{r, fig.align='left', fig.height = 3, fig.width = 5}
 prior_df <- data.frame(x = rbeta(1e5, 2, 2))

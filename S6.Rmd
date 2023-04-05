@@ -9,9 +9,9 @@ output:
 ---
 
 This appendix aims to illustrate the performance of the alternative 
-parameterisation under various levels of transmission ($\Re$) and mean 
+parameterisation under various transmissibility levels ($\Re_0$) and mean 
 generation times. For simplicity, we restrict the $SE^iI^jR$ to four instances
-($i = 1$, and $j = \{1,2,3,4\}$) for data generation and matching.
+($i = 1$, and $j = \{1,2,3,4\}$) for data generation and fitting.
 
 
 ```{r setup, include=FALSE}
@@ -46,12 +46,13 @@ configuration of $\Re_0$ and the mean generation time ($\tau$) in the $SE^iI^jR$
 framework to produce synthetic data. Since, $\tau$ varies as the distribution of
 the infectious period ($j$) changes, we identify each scenario by the mean 
 generation time obtained from an exponentially-distributed infectious period 
-denoted by ($\tau_e$). Nonetheless, we generate synthetic for all four values of
-$j$ (20 each). Furthermore, data is generated for two configurations of the 
-Negative Binomial measurement model: Poisson ($\phi^{-1} = 0$) & overdispersed
-$\phi^{-1} = \frac{1}{3}$. As a result, we produce 160 synthetic incidence
-reports per scenario. Then, we fit four candidates per incidence report, where
-we assume the appropriate measurement model.
+(denoted by $\tau_e$). For each instance and data-fidelity level, we generate
+20 synthetic incidence reports. Recall that fidelity levels correspond to two
+configurations of the Negative Binomial measurement model: high fidelity
+($\phi^{-1} = 0$) & low fidelity ($\phi^{-1} = \frac{1}{3}$). As a result, we 
+produce *160* synthetic incidence reports per scenario. Then, we fit four 
+candidates per incidence report, where we assume the appropriate 
+measurement model.
 
 ```{r}
 scenario_df <- data.frame(Scenario = 1:5,
@@ -156,7 +157,8 @@ save_synthetic_data(syn_data_file, y_df_nb)
 ```{r}
 y_df <- bind_rows(y_df_nb, y_df_pois) |> 
   mutate(highlight = ifelse(dataset == 10, TRUE, FALSE))
-plot_meas_incidence_by_overdispersion(y_df)
+
+plot_y_by_overdispersion(y_df)
 ```
 
 ## Inference
@@ -667,7 +669,7 @@ save_synthetic_data(syn_data_file, y_df_nb)
 ```{r}
 y_df <- bind_rows(y_df_nb, y_df_pois) |> 
   mutate(highlight = ifelse(dataset == 10, TRUE, FALSE))
-plot_meas_incidence_by_overdispersion(y_df)
+plot_y_by_overdispersion(y_df)
 ```
 
 
@@ -1162,7 +1164,7 @@ save_synthetic_data(syn_data_file, y_df_nb)
 ```{r}
 y_df <- bind_rows(y_df_nb, y_df_pois) |> 
   mutate(highlight = ifelse(dataset == 10, TRUE, FALSE))
-plot_meas_incidence_by_overdispersion(y_df)
+plot_y_by_overdispersion(y_df)
 ```
 
 
@@ -1660,7 +1662,7 @@ save_synthetic_data(syn_data_file, y_df_nb)
 ```{r}
 y_df <- bind_rows(y_df_nb, y_df_pois) |> 
   mutate(highlight = ifelse(dataset == 10, TRUE, FALSE))
-plot_meas_incidence_by_overdispersion(y_df)
+plot_y_by_overdispersion(y_df)
 ```
 
 ## Inference

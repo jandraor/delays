@@ -9,9 +9,9 @@ output:
 ---
 
 This appendix illustrates the process of fitting various parameterisations
-of the $SE^1I^jR$ model ($M^{1j}$ & $M^{3j}$) to **Overdispersed $D^{3j}$** 
+of the $SE^iI^jR$ model ($M^{1j}$ & $M^{3j}$) to **low-fidelity $D^{3j}$** 
 incidence reports. We mean by *parameterisation* the decision of categorising 
-parameters as either *unknown* or *assumed*. For unknown parameters, we 
+parameters as either *unknown* or *assumed*. For the unknown parameters, we 
 construct prior distributions, which will be eventually updated in light of the
 data via HMC sampling, resulting in a posterior distribution. On the other hand,
 assumed parameters are fixed at their true values.
@@ -68,14 +68,13 @@ samples_per_chain <- 1000
 M_j               <- 1:4
 ```
 
-# Three-unknown
+# Three-unknown parameterisation (traditional)
 
-As the name suggests, for candidates from this parameterisation, we assume that
-two parameters and one initial condition are unknown: $\beta$, $\rho$, and 
-$I^1_0$. Each candidate is coupled with the Negative Binomial distribution. The 
-selection of this likelihood function entails the estimation of an additional 
-parameter, the degree of concentration ($\phi^{-1}$) around the incidence's 
-expected value.
+For candidates from this parameterisation, we assume that two parameters and one
+initial condition are unknown: $\beta$, $\rho$, and $I^1_0$. Each candidate is 
+coupled with the Negative Binomial distribution. The selection of this 
+likelihood function entails the estimation of an additional parameter, the 
+degree of concentration ($\phi^{-1}$) around the incidence's expected value.
 
 ## Prior distributions {#link1}
 
@@ -118,8 +117,8 @@ plot_prior(prior_df, "phi^{-1}", "phi^{-1}~'~ exp(5)'", c(0, 1.5), 25)
 
 We stratify inference results by the distribution of the infectious period that
 produced the observed incidences. For instance, $D_{31}$ implies that the fitted
-incidence stems from an SEIR with an gamma-distributed latent (shape = 3) period
-and an exponential-distributed infectious period.
+incidence stems from an $SE^3I^1R$ with an gamma-distributed (shape = 3) latent 
+period and an exponential-distributed infectious period.
 
 ```{r}
 root_fldr <- "./Saved_objects/Inference/Synthetic_data/SEIR/Case_4/Three_params"
@@ -196,14 +195,14 @@ We draw on the mean absolute scaled error (MASE) to compare incidence fits. This
 quantity is a measure of the accuracy of forecasts, well-suited for time-series.
 Therefore, we employ the MASE to compare each of the 4000 simulated latent 
 incidences against its true counterpart ($x$) and observed incidence ($y$). By 
-simulated latent incidences, we refer to the process of plugging a posterior 
-distribution (samples) into an ODE model to obtain incidence trajectories via
+simulated latent incidences, we refer to the process of plugging the samples of
+a posterior distribution into an ODE model to obtain incidence trajectories via
 simulation. We summarise the results via histograms in the plot below. The left
 column (of panels) contains the comparison between simulated and actual latent 
 incidences. The right column of panels displays the comparison between simulated
 latent incidence and the observed incidence. Overall, there is no noticeable
 difference in the histograms as the distribution of the infectious period in the
-fitting model varies (increasing $j$). In contrast, assuming the wrong
+fitting model varies (increasing $j$). In stark contrast, assuming the wrong
 distribution of the latent period leads to suboptimal incidence fits. Notice
 that assuming a gamma-distributed latent period with shape 3 ($i = 3$) produces
 better fits (lower MASE) than a model with the same distribution of the 
@@ -214,7 +213,7 @@ plot_hist_mase2(posterior_sample, y_df, c(0, 1.5))
 ```
 
 
-#### Joint posterior distribution (right $i$)
+#### Joint posterior distribution (right latent period)
 
 In this plot, we show an example of a joint posterior distribution. 
 Specifically, this posterior distribution was derived from fitting the $M^{31}$
@@ -229,7 +228,7 @@ pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
                 M_j = D_j)
 ```
 
-#### Joint posterior distribution (wrong $i$)
+#### Joint posterior distribution (wrong latent period)
 
 This posterior distribution was obtained from fitting the $M^{11}$ candidate to
 one $D^{31}$ incidence report.
@@ -343,7 +342,7 @@ plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
 plot_hist_mase2(posterior_sample, y_df, c(0, 1.5))
 ```
 
-#### Joint posterior distribution (right $i$)
+#### Joint posterior distribution (right latent period)
 
 This posterior distribution was derived from fitting the $M^{32}$
 candidate to one $D^{32}$ incidence report.
@@ -357,7 +356,7 @@ pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
                 M_j = D_j)
 ```
 
-#### Joint posterior distribution (wrong $i$)
+#### Joint posterior distribution (wrong latent period)
 
 This posterior distribution was obtained from fitting the $M^{12}$ candidate to
 one $D^{32}$ incidence report.
@@ -464,7 +463,7 @@ plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
 plot_hist_mase2(posterior_sample, y_df, c(0, 1.5))
 ```
 
-#### Joint posterior distribution (right $i$)
+#### Joint posterior distribution (right latent period)
 
 This posterior distribution was derived from fitting the $M^{33}$
 candidate to one $D^{33}$ incidence report.
@@ -478,7 +477,7 @@ pairs_posterior(joint_posterior_df1, strip_text = 10, axis_text_size = 7,
                 M_j = D_j)
 ```
 
-#### Joint posterior distribution (wrong $i$)
+#### Joint posterior distribution (wrong latent period)
 
 This posterior distribution was obtained from fitting the $M^{13}$ candidate to
 one $D^{33}$ incidence report.
@@ -648,7 +647,7 @@ plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
 plot_hist_mase2(posterior_sample, y_df, c(0, 1.5))
 ```
 
-#### Joint posterior distribution (right $i$)
+#### Joint posterior distribution (right latent period)
 
 This posterior distribution was derived from fitting the $M^{34}$
 candidate to one $D^{34}$ incidence report.
@@ -731,7 +730,7 @@ coverage_df <- bind_rows(coverage_1, coverage_2) |>
 table_coverage(coverage_df)
 ```
 
-# Four unknowns
+# Four-unknown parameterisation
 
 In this parameterisation, for each candidate, we assume one additional unknown
 parameter: the recovery rate ($\gamma$). Furthermore, all candidates are coupled
@@ -845,6 +844,7 @@ plot_par_estimates_by_dataset(posterior_subset, "inv_phi", inv_phi_val,
                               x_min = 0, x_max = 1, x_label = "phi^-1", 
                               D_i, D_j)
 ```
+
 ##### Recovery rate ($\gamma$)
 
 For this parameter, we opt for a different visualisation. Specifically, for 
@@ -1144,36 +1144,36 @@ ll_subset <- ll_df |> filter(dataset %in% c(1, 10))
 plot_scatterplot_R0_vs_tau(ll_subset, c(0,15), c(0, 10))
 ```
 
-# Three-unknown (Alternative)
+# Three-unknown parameterisation (Alternative)
 
 The *alternative parameterisation* refers to the algebraic manipulation of the
 $SE^iI^jR$ framework so as to obtain a set equations wherein the basic 
 reproduction number ($\Re_0$) and the mean generation time ($\tau$) are 
 explicit parameters of the model. In doing so, $\beta$ and $\gamma$ become
 functions of other variables rather than parameters. In these parameterisation,
-we assume as unknown the basic reproduction number (its inverse), the reporting
-rate ($\rho$) and initial number of infectious individuals ($I^1_0$). All of the 
-other parameters are fixed to their true values.
-
-\begin{equation}
-  \begin{aligned}
-    \dot{S_t}   &= -\frac{\beta(\tau, \sigma, \Re_0, i, j) S_t \sum^i_{k=1} I^k_t}{N}\\
-    \dot{E^1_t} &= \frac{\beta(\tau, \sigma, \Re_0, i, j) S_t \sum^i_{k=1} I^k_t}{N} - i\sigma E^1_t \\
-    \dot{E^2_t} &= i\sigma E^1_t - i\sigma E^2_t \\
-    \vdots \\
-    \dot{E^i_t} &= i \sigma E^{i - 1}_t - i \sigma E^i_t \\
-    \dot{I^1_t} &= i \sigma E^{i - j}_t - \gamma(\beta, \Re_0)I^1_t \\
-    \dot{I^2_t} &= j \gamma(\beta, \Re_0) I^{1 - j}_t - \gamma(\beta, \Re_0) I^2_t  \\
-    \vdots \\
-    \dot{I^j_t} &= j \gamma(\beta, \Re_0) I^{j - 1}_t - j \gamma(\beta, \Re_0) I^{j}_t \\
-    \dot{R_t}   &= j \gamma(\beta, \Re_0)I^j_t
-  \end{aligned}
-\end{equation}
+we assume the basic reproduction number's inverse, the reporting rate ($\rho$)
+and initial number of infectious individuals ($I^1_0$) as unknowns. The 
+remaining parameters are fixed to their true values.
 
 \begin{equation}
   \begin{aligned}
     \beta       &= \frac{2 j (\tau - \sigma^{-1})}{\Re_0^{-1} (j + 1)}\\
     \gamma      &= \beta \Re_0^{-1}
+  \end{aligned}
+\end{equation}
+
+\begin{equation}
+  \begin{aligned}
+    \dot{S_t}   &= -\frac{\beta S_t \sum^i_{k=1} I^k_t}{N}\\
+    \dot{E^1_t} &= \frac{\beta S_t \sum^i_{k=1} I^k_t}{N} - i\sigma E^1_t \\
+    \dot{E^2_t} &= i\sigma E^1_t - i\sigma E^2_t \\
+    \vdots \\
+    \dot{E^i_t} &= i \sigma E^{i - 1}_t - i \sigma E^i_t \\
+    \dot{I^1_t} &= i \sigma E^{i}_t - \gamma I^1_t \\
+    \dot{I^2_t} &= j \gamma I^{1}_t - \gamma I^2_t  \\
+    \vdots \\
+    \dot{I^j_t} &= j \gamma I^{j - 1}_t - j \gamma I^{j}_t \\
+    \dot{R_t}   &= j \gamma I^j_t
   \end{aligned}
 \end{equation}
 
@@ -1200,10 +1200,10 @@ identical to those described [here](#link1).
 ### The inverse of the basic reproduction number ($\Re_0^{-1}$)
 
 Since model candidates are fitting outbreak-like incidence data, it is warranted
-to assume that the basic reproduction number is higher than one ($\Re_0^{-1}$).
-This observation implies that the magnitude of  its inverse is below that 
-threshold. Consequently, we formulate a prior that is consistent with such a 
-constraint.
+to assume that the basic reproduction number is higher than one ($\Re_0 > 1$).
+This observation implies that the magnitude of its inverse ($\Re_0^{-1}$) 
+between 0 and 1. Consequently, we formulate a prior that is consistent with
+such a constraint.
 
 ```{r, fig.align='left', fig.height = 3, fig.width = 5}
 prior_df <- data.frame(x = rbeta(1e5, 2, 2))
@@ -1696,305 +1696,6 @@ pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
 
 ```{r}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2.2, 3, D_i, D_j)
-```
-
-## Summary
-
-### Coverage
-
-
-```{r}
-actual_values <- data.frame(par = c("R0", "par_rho", "I0"), 
-                            actual_val = c(R0_val, rho_val, 1))
-
-map_df(ll_list, calculate_coverage, actual_values, inv_gamma_val) |> 
-  pivot_wider(names_from = par, values_from = pct_right) -> coverage_df
-```
-
-```{r}
-table_coverage(coverage_df)
-```
-
-# Three-unknown (Alternative) - Normal
-
-In this section, we test the implications of amalgamating the alternative
-parameterisation with a **Normal** measurement model (likelihood function) to 
-fit overdispersed incidence data. 
-
-```{r}
-root_fldr  <- "./Saved_objects/Inference/Synthetic_data/SEIR/Case_4/Three_params_alt_norm"
-M_i        <- 1
-M_j        <- 1:4
-n_params   <- 5
-
-all_files  <- readRDS("./Stan_files/Inference/Three_params_alt/norm/meta_info.rds")
-fltr       <- map_lgl(all_files, \(fl_list) fl_list$E_ord == M_i)
-info_files <- all_files[fltr]
-
-ll_list    <- vector(mode = "list", length = length(M_j))
-```
-
-## Prior distributions
-
-The prior distributions shown below apply for all candidates from this 
-parameterisation. Prior distributions for $\rho$, $I^1_0$ and $\Re_0^{-1}$ are 
-identical to those described [here](#link3).
-
-
-### Standard deviation ($\epsilon$)
-
-The choice of a Gaussian measurement model under the assumption of 
-homoscedasticity implies the estimation of an additional parameter, the standard
-deviation denoted by the Greek letter epsilon ($\epsilon$).
-
-```{r, fig.align='left', fig.height = 3, fig.width = 5}
-prior_df <- data.frame(x = rexp(1e5, 0.2))
-plot_prior(prior_df, "epsilon", "epsilon~'~ exp(0.2)'", c(0, 30), 15)
-```
-
-## Posterior distributions
-
-### Fitting $D^{31}$
-
-```{r}
-D_i    <- 3
-D_j    <- 1
-n_data <- 20 
-create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
-```
-
-```{r}
-ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
-                               root_fldr, n_chains, samples_per_chain, 
-                               n_params = n_params, alt_param = TRUE)
-```
-
-```{r}
-ds               <- 1
-posterior_sample <- ll_list[[D_j]][[ds]]
-
-ds_subset        <- c(1, 7, 13, 19)
-posterior_subset <- ll_list[[D_j]][ds_subset]
-```
-
-#### Incidence fit
-
-```{r}
-incidence_df <- extract_incidence(posterior_sample, 30)
-plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
-```
-
-
-```{r}
-plot_hist_mase(posterior_sample, y_df, c(0, 2))
-```
-
-#### Joint posterior distribution
-
-```{r}
-joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
-  select(par_inv_R0, par_rho, I0, epsilon)
-
-pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7, 
-                M_j = D_j)
-```
-
-#### Marginal posterior distributions
-
-
-##### Basic reproduction number ($\Re_0$)
-
-```{r}
-plot_R0_comparison_by_dataset(posterior_subset, R0_val, 1, 4, D_i, D_j)
-```
-
-##### Standard deviation ($\epsilon$)
-
-```{r}
-prior_df <- data.frame(sims = rexp(4e3, 0.2))
-prior_posterior_comparison(posterior_sample, prior_df, "epsilon",
-                           "Grey histogram (prior): exp(0.2)")
-```
-
-### Fitting $D^{32}$
-
-```{r}
-D_i    <- 3
-D_j    <- 2
-n_data <- 20 
-create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
-```
-
-```{r}
-ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
-                               root_fldr, n_chains, samples_per_chain, 
-                               n_params = n_params, alt_param = TRUE)
-```
-
-```{r}
-ds               <- 1
-posterior_sample <- ll_list[[D_j]][[ds]]
-
-ds_subset        <- c(1, 7, 13, 19)
-posterior_subset <- ll_list[[D_j]][ds_subset]
-```
-
-#### Incidence fit
-
-```{r}
-incidence_df <- extract_incidence(posterior_sample, 30)
-plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
-```
-
-```{r}
-plot_hist_mase(posterior_sample, y_df, c(0, 2))
-```
-
-#### Joint posterior distribution
-
-```{r}
-joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
-  select(par_inv_R0, par_rho, I0, epsilon)
-
-pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
-                M_j = D_j)
-```
-
-#### Marginal posterior distributions
-
-
-##### Basic reproduction number ($\Re_0$)
-
-```{r}
-plot_R0_comparison_by_dataset(posterior_subset, R0_val, 1, 4, D_i, D_j)
-```
-
-##### Standard deviation ($\epsilon$)
-
-```{r}
-prior_df <- data.frame(sims = rexp(4e3, 0.2))
-prior_posterior_comparison(posterior_sample, prior_df, "epsilon",
-                           "Grey histogram (prior): exp(0.2)")
-```
-
-### Fitting $D^{33}$
-
-```{r}
-D_i    <- 3
-D_j    <- 3
-n_data <- 20 
-create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
-```
-
-```{r}
-ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
-                               root_fldr, n_chains, samples_per_chain, 
-                               n_params = n_params, alt_param = TRUE)
-```
-
-```{r}
-ds               <- 1
-posterior_sample <- ll_list[[D_j]][[ds]]
-
-ds_subset        <- c(1, 7, 13, 19)
-posterior_subset <- ll_list[[D_j]][ds_subset]
-```
-
-#### Incidence fit
-
-```{r}
-incidence_df <- extract_incidence(posterior_sample, 30)
-plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
-```
-
-```{r}
-plot_hist_mase(posterior_sample, y_df, c(0, 2.5))
-```
-
-#### Joint posterior distribution
-
-```{r}
-joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
-  select(par_inv_R0, par_rho, I0, epsilon)
-
-pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7,
-                M_j = D_j)
-```
-
-#### Marginal posterior distributions
-
-##### Basic reproduction number ($\Re_0$)
-
-```{r}
-plot_R0_comparison_by_dataset(posterior_subset, R0_val, 1, 4, D_i, D_j)
-```
-
-##### Standard deviation ($\epsilon$)
-
-```{r}
-prior_df <- data.frame(sims = rexp(4e3, 0.2))
-prior_posterior_comparison(posterior_sample, prior_df, "epsilon",
-                           "Grey histogram (prior): exp(0.2)")
-```
-
-### Fitting $D^{34}$
-
-```{r}
-D_i    <- 3
-D_j    <- 4
-n_data <- 20 
-create_backup_fldrs(D_i, D_j, n_data, M_i, M_j, root_fldr)
-```
-
-```{r}
-ll_list[[D_j]] <- fit_datasets(D_i, D_j, n_data, y_df, info_files, 
-                               root_fldr, n_chains, samples_per_chain, 
-                               n_params = n_params, alt_param = TRUE)
-```
-
-```{r}
-ds               <- 1
-posterior_sample <- ll_list[[D_j]][[ds]]
-
-ds_subset        <- c(1, 7, 13, 19)
-posterior_subset <- ll_list[[D_j]][ds_subset]
-```
-
-#### Incidence fit
-
-```{r}
-incidence_df <- extract_incidence(posterior_sample, 30)
-plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
-```
-
-```{r}
-plot_hist_mase(posterior_sample, y_df, c(0, 2.5))
-```
-
-#### Joint posterior distribution
-
-```{r}
-joint_posterior_df <- posterior_sample |> filter(M_j == !!D_j) |> 
-  select(par_inv_R0, par_rho, I0, epsilon)
-
-pairs_posterior(joint_posterior_df, strip_text = 10, axis_text_size = 7, 
-                M_j = D_j)
-```
-
-#### Marginal posterior distributions
-
-##### Basic reproduction number ($\Re_0$)
-
-```{r}
-plot_R0_comparison_by_dataset(posterior_subset, R0_val, 1, 4, D_i, D_j)
-```
-
-##### Standard deviation ($\epsilon$)
-
-```{r}
-prior_df <- data.frame(sims = rexp(4e3, 0.2))
-prior_posterior_comparison(posterior_sample, prior_df, "epsilon",
-                           "Grey histogram (prior): exp(0.2)")
 ```
 
 ## Summary

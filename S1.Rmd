@@ -66,11 +66,10 @@ ts_val  <- 60
 ## System (latent) component
 
 The first step for generating synthetic data consists of simulating each of 
-the instances from the $SE^iI^jR$ framework. As mentioned in the main text, we 
-restrict the number of instances to eight. Two parameterisations for the latent 
-period, $i =\{1,3\}$, and four parameterisations, $j =\{1,2,3,4\}$, for the 
-infectious period. Moreover, these instances are configured to plausible 
-parameter values and initial conditions.
+the $SE^iI^jR$ instances. As mentioned in the main text, we restrict the number
+of instances to eight. Two for the latent period, $i =\{1,3\}$, and four, 
+$j =\{1,2,3,4\}$, for the infectious period. Moreover, these instances are 
+configured to plausible parameter values and initial conditions.
 
 ### Parameter values
 
@@ -131,12 +130,13 @@ ggsave("./plots/Fig_01_Latent_states.pdf", height = 5, width = 5)
 
 Subsequently, for each latent incidence, we generate $40$ incidence reports 
 using the Negative Binomial distribution. Specifically, we produce *two* sets of
-20 reports. The first set's level of noise is equivalent to that of the Poisson
-distribution (no overdispersion). Namely, the concentration parameter 
-($\phi^{-1}$) is set at zero. For the other set of reports, we add 
-overdispersion ($\phi^{-1} = 1/3$).
+20 reports. The first set's noise level is equivalent to that of the Poisson
+distribution (no overdispersion).  Namely, the concentration parameter 
+($\phi^{-1}$) is set to zero. We refer to these sets as *high-fidelity*. For the
+other sets, we add overdispersion ($\phi^{-1} = 1/3$) and identified them as 
+*low-fidelity*.
 
-### Poisson $D^{1j}$
+### High-fidelity (Poisson) $D^{1j}$
 
 ```{r}
 phi_val <- 0 # Poisson
@@ -167,7 +167,7 @@ case_1_df <- do.call(rbind, y_list) |>
   mutate(disp = "phi^-1 ~'= 0 (High-fidelity)'")
 ```
 
-### Overdispersed $D^{1j}$
+### Low-fidelity (overdispersed) $D^{1j}$
 
 ```{r}
 phi_val <- 1/3
@@ -208,7 +208,7 @@ ggsave("./plots/Fig_02_Measurements.pdf", plot = g, height = 4, width = 5)
 ```
 
 
-### Poisson $D^{3j}$
+### High-fidelity $D^{3j}$
 
 ```{r}
 i_val   <- 3
@@ -238,7 +238,7 @@ if(!file.exists(syn_data_file)) {
 }
 ```
 
-### Overdispersed $D^{3j}$
+### Low-fidelity $D^{3j}$
 
 ```{r}
 phi_val <- 1/3
@@ -271,14 +271,14 @@ if(!file.exists(syn_data_file)) {
 
 # Inference files
 
-As it widely known, one can employ mechanistic models as inference tools to
-match data in order to estimate unknown quantities. In this work, we perform
-the inference process through the Statistical software *Stan*. This software
-requires users to specify the instructions for the sampling process in Stan's 
-own language. In the sections below, we show examples of such language for
-the three parameterisations described in the main text.
+One can employ mechanistic models as inference tools to fit data in order to
+estimate unknown quantities. In this work, we perform the inference process
+through the Statistical software *Stan*. This software requires users to 
+specify the instructions for the sampling process in Stan's own language. In the
+sections below, we show examples of such language for the three
+parameterisations described in the main text.
 
-## Three-unknowns
+## Three-unknown parameterisation (traditional)
 
 ### Example 1
 
@@ -334,7 +334,7 @@ saveRDS(info_files, "./Stan_files/Inference/Three_params/nbin/meta_info.rds")
 read_file(info_files[[7]]$stan_filepath) |> cat()
 ```
 
-## Four-unknowns
+## Four-unknown parameterisation
 
 ### Example 1
 
@@ -386,7 +386,7 @@ saveRDS(info_files,
 read_file(info_files[[3]]$stan_filepath) |> cat()
 ```
 
-## Three-unknowns (Alternative)
+## Three-unknown parameterisation (Alternative)
 
 ### Example 1
 
@@ -440,31 +440,6 @@ saveRDS(info_files,
 
 ```{r}
 read_file(info_files[[2]]$stan_filepath) |> cat()
-```
-
-### Example 3
-
-Here is an example of an $M^{13}$ candidate coupled with a Gaussian measurement
-model.
-
-```{r}
-meas_mdl <- "norm"
-i_list   <- list(1)
-j_list   <- list(1:4)
-
-info_files <- map2(i_list, j_list, \(M_i, M_j) {
-  
-  info_files <- create_SEIR_files(M_i, M_j, inv_sigma_val, inv_gamma_val, N_val, 
-                                meas_mdl, stan_fldr, gamma_unk = FALSE,
-                                alt_param = TRUE)
-}) |> unlist(recursive = FALSE)
-
-saveRDS(info_files, 
-        str_glue("{stan_fldr}/{meas_mdl}/meta_info.rds"))
-```
-
-```{r}
-read_file(info_files[[3]]$stan_filepath) |> cat()
 ```
 
 
