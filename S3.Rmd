@@ -941,8 +941,8 @@ unknowns. The remaining parameters are fixed to their true values.
 
 \begin{equation}
   \begin{aligned}
-    \dot{S_t}   &= -\frac{\beta S_t \sum^i_{k=1} I^k_t}{N}\\
-    \dot{E^1_t} &= \frac{\beta S_t \sum^i_{k=1} I^k_t}{N} - i\sigma E^1_t \\
+    \dot{S_t}   &= -\frac{\beta S_t \sum^j_{k=1} I^k_t}{N}\\
+    \dot{E^1_t} &= \frac{\beta S_t \sum^j_{k=1} I^k_t}{N} - i\sigma E^1_t \\
     \dot{E^2_t} &= i\sigma E^1_t - i\sigma E^2_t \\
     \vdots \\
     \dot{E^i_t} &= i \sigma E^{i - 1}_t - i \sigma E^i_t \\
