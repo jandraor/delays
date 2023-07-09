@@ -45,7 +45,7 @@ infected during the second wave of infections in the autumn of 1918. In the
 figure below, we show the report of new cases detected in the city of 
 Cumberland (Maryland) over that period.
 
-```{r}
+```{r, fig.cap = 'Fig 1. Cumberland\'s incidence data'}
 Maryland_data <- read_csv("./data/Maryland_incidence.csv", 
                           show_col_types = FALSE)
 
@@ -184,6 +184,11 @@ pred_incidence$parameterisation <- factor(pred_incidence$parameterisation,
 ```
 
 ```{r}
+caption <- "Fig 2. Posterior predictive checks"
+```
+
+
+```{r, fig.cap = caption}
 plot_posterior_pred_checks(pred_incidence, Cumberland_df)
 ```
 
@@ -193,8 +198,6 @@ p1 <- fig_7_main(pred_incidence2, Cumberland_df)
 ```
 
 ### Joint posterior distribution
-
-
 
 
 ### Marginal distributions
@@ -208,6 +211,11 @@ both_df$parameterisation <- factor(both_df$parameterisation,
 #### Basic reproduction number ($\Re_0$)
 
 ```{r}
+caption <- "Fig 3. Estimation of the basic reproduction number by model candidate and parameterisation"
+```
+
+
+```{r, fig.cap = caption}
 plot_hist_by_M_j(both_df, "R0", x_label = "R[0]", c(1.8, 2.5), n_bins = 50)
 ```
 
@@ -234,17 +242,29 @@ ggsave("./plots/Fig_07_Cumberland.pdf", plot_Cumberland , height = 4,
 #### Reporting rate ($\rho$)
 
 ```{r}
+caption <- "Fig 4. Estimation of the reporting rate by model candidate and parameterisation"
+```
+
+```{r, fig.cap = caption}
 plot_hist_by_M_j(both_df, "par_rho", x_label = "rho", c(0, 1), 60)
 ```
 
 #### Initial number of infectious individuals ($I_0$) 
 
 ```{r}
+caption <- "Fig 5. Estimation of the initial number of infectious individuals by model candidate and parameterisation"
+```
+
+```{r, fig.cap = caption}
 plot_hist_by_M_j(both_df, "I0", x_label = "I(0)", c(0, 8), 30)
 ```
 
 #### Overdispersion parameter ($\phi^{-1}$)
 
 ```{r}
+caption <- "Fig 6. Estimation of overdispersion by model candidate and parameterisation"
+```
+
+```{r, fig.cap = caption}
 plot_hist_by_M_j(both_df, "inv_phi", x_label = "phi^-1", c(0, 1))
 ```

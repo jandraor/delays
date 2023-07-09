@@ -4,14 +4,14 @@ fig_3A <- function(df, ds, actual_val, n_row = 1, lims, axis_text_x = 8,
   
     
     summary_df <- summarise_R0_for_figs(df, ds) |> 
-      mutate(label_Dij = paste0("'Vertical line:'~D^", D_ij))
+      mutate(label_Dij = paste0("'True model:'~D^", D_ij))
 
     vline_df <- data.frame(actual_val = actual_val,
                            label_Dij  = unique(summary_df$label_Dij),
                            D_j        = unique(summary_df$D_j))
 
     
-    label_df <- data.frame(label_Dij = rep(str_glue("'Vertical line:'~D^1{1:4}"),each = 4),
+    label_df <- data.frame(label_Dij = rep(str_glue("'True model:'~D^1{1:4}"),each = 4),
                            M_j = 1:4, x = c(3   , 2.9, 2.85, 2.8,
                                             3   , 2.9, 2.85, 2.8,
                                             3.05, 2.95, 2.90, 2.85,
@@ -30,14 +30,14 @@ fig_4A <- function(df, ds, actual_val, n_row = 1, lims, axis_text_x = 8,
                    strip_text_size = 6, bar_width = 0.8) {
   
   summary_df <- summarise_R0_for_figs(df, ds) |> 
-    mutate(label_Dij = paste0("'Vertical line:'~D^", D_ij))
+    mutate(label_Dij = paste0("'True model:'~D^", D_ij))
 
   vline_df <- data.frame(actual_val = actual_val,
                          label_Dij  = unique(summary_df$label_Dij),
                          D_j        = unique(summary_df$D_j))
   
 
-  label_df <- data.frame(label_Dij = rep(str_glue("'Vertical line:'~D^1{1:4}"),each = 4),
+  label_df <- data.frame(label_Dij = rep(str_glue("'True model:'~D^1{1:4}"),each = 4),
                          M_j = 1:4, x = c(1.50, 1.35, 1.30, 1.25,
                                           1.75, 1.65, 1.6, 1.55,
                                           1.75, 1.65, 1.6, 1.55,
@@ -59,7 +59,7 @@ plot_error_bar <- function(df, limits, breaks, vline_df, label_df,
   
   title_txt <- paste0("'Error bars: Estimates from' ~ M^{'", 1, "j'}~'fitting instances'")
   
-  cap_txt <- paste("Vertical line: Actual value \t \t j: # of stages in the infectious class (I)", 
+  cap_txt <- paste("Vertical line: True value \t \t \t j: # of stages in the infectious class (I)", 
                    "D\U2071\U02B2: Data generator's distribution \t M\U2071\U02B2: Fitting model's distribution",
                    sep = "\n")
   
@@ -203,13 +203,13 @@ fig_4C <- function(df, ds, x_lims, y_lims) {
 fig_5 <- function(df, ds, actual_val) {
   
   summary_df <- summarise_R0_for_figs(df, ds) |> 
-    mutate(label_Dij = paste0("'Vertical line:'~D^", D_ij))
+    mutate(label_Dij = paste0("'True model:'~D^", D_ij))
   
   vline_df <- data.frame(actual_val = actual_val,
                          label_Dij  = unique(summary_df$label_Dij),
                          D_j        = unique(summary_df$D_j))
   
-  label_df <- data.frame(label_Dij = rep(str_glue("'Vertical line:'~D^1{1:4}"),each = 4),
+  label_df <- data.frame(label_Dij = rep(str_glue("'True model:'~D^1{1:4}"),each = 4),
                          M_j = 1:4, x = 2.42 , y = 4:1) |> 
     mutate(txt = str_glue("M^1{M_j}"))
   

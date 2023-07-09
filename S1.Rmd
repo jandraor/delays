@@ -79,7 +79,7 @@ these values implies that all instances share an identical $\Re_0$ value (2.5).
 
 <br>
 
-```{r}
+```{r, fig.cap= 'Table 1. Constants'}
 par_df <- data.frame(Parameter = c('$$\\beta$$', "$$\\sigma$$", "$$\\gamma$$", "$$\\rho$$", "$$N$$"),
                      Value     = c(beta_val, 1/inv_sigma_val, 1/inv_gamma_val, rho_val, N_val))
 
@@ -110,7 +110,7 @@ the $SE^iI^jR$ framework.
 
 <br>
 
-```{r}
+```{r, warning = FALSE}
 i_list <- list(1, 3)
 j_list <- list(1:4, 1:4)
 
@@ -120,7 +120,7 @@ map2_dfr(i_list, j_list, function(i, j) {
 }) -> latent_df
 ```
 
-```{r}
+```{r, fig.cap = 'Fig 1. Incidence obtained from the ODE instances'}
 plot_latent_incidence(latent_df)
 
 ggsave("./plots/Fig_01_Latent_states.pdf", height = 5, width = 5)
@@ -151,6 +151,11 @@ y_list <- lapply(1:n_ds, function(i) {
 ```
 
 ```{r}
+caption <- 'Fig 2. Simulated incidence reports. Measurement noise from the Poisson distribution was added to the smooth trajectories obtained from SEIR instances with an exponential-distributed latent period.'
+```
+
+
+```{r, fig.cap = caption}
 plot_incidence(y_list, "Poisson")
 ```
 
@@ -182,10 +187,13 @@ y_list <- lapply(1:n_ds, function(i) {
 ```
 
 ```{r}
-plot_incidence(y_list, "Negative Binomial")
+caption <- 'Fig 3. Simulated incidence reports. Measurement noise from the negative binomial distribution with overdispersion was added to the smooth trajectories obtained from SEIR instances with an exponential-distributed latent period.'
 ```
 
 
+```{r,  fig.cap = caption}
+plot_incidence(y_list, "Negative Binomial")
+```
 
 ```{r}
 syn_data_file <- "./data/Synthetic/SEIR/Case_2.csv"
@@ -225,8 +233,12 @@ y_list <- lapply(1:n_ds, function(ds) {
 })
 ```
 
-
 ```{r}
+caption <- 'Fig 4. Simulated incidence reports. Measurement noise from the Poisson distribution was added to the smooth trajectories obtained from SEIR instances with an gamma-distributed latent period.'
+```
+
+
+```{r, fig.cap = caption}
 plot_incidence(y_list, "Poisson")
 ```
 
@@ -256,8 +268,12 @@ y_list <- lapply(1:n_ds, function(ds) {
 })
 ```
 
-
 ```{r}
+caption <- 'Fig 5. Simulated incidence reports. Measurement noise from the negative binomial distribution with overdispersion was added to the smooth trajectories obtained from SEIR instances with an gamma-distributed latent period.'
+```
+
+
+```{r, fig.cap = caption}
 plot_incidence(y_list, "Negative Binomial")
 ```
 

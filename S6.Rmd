@@ -155,6 +155,13 @@ save_synthetic_data(syn_data_file, y_df_nb)
 ```
 
 ```{r}
+fig_cntr <- 1
+
+caption <- str_glue("Fig {fig_cntr}. Scenario 2's simulated incidence reports. Measurement noise from the Poisson (no overdispersion) & Negative Binomial distributions was added to the smooth trajectories obtained from SEIR instances with an exponential-distributed latent period.")
+```
+
+
+```{r, fig.cap = caption}
 y_df <- bind_rows(y_df_nb, y_df_pois) |> 
   mutate(highlight = ifelse(dataset == 10, TRUE, FALSE))
 
@@ -198,11 +205,23 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_pois, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 1))
 ```
 
@@ -210,6 +229,11 @@ plot_hist_mase(posterior_sample, y_df_pois, c(0, 1))
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
 ```
 
@@ -230,12 +254,22 @@ the alternative parameterisation. In other words, it is costlier to misspecify
 the mean generation time than the mean infectious period.
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(trad_list, R0_val, 2, 3, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 5, x_label = "I[0]", D_i, D_j)
 ```
@@ -268,23 +302,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_pois, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 1))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 5, x_label = "I[0]", D_i, D_j)
 ```
@@ -317,23 +373,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_pois, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 1))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 5, x_label = "I[0]", D_i, D_j)
 ```
@@ -366,23 +444,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.caption = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_pois, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 1))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 5, x_label = "I[0]", D_i, D_j)
 ```
@@ -400,7 +500,7 @@ map_df(ll_list, calculate_coverage, actual_values, inv_gamma_val) |>
 ```
 
 ```{r}
-table_coverage(coverage_df)
+table_coverage(coverage_df, "Table 2. Scenario 2's coverage table. Poisson noise")
 ```
 
 
@@ -440,24 +540,46 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_nb, D_i, D_j, ds)
 ```
 
-
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df, c(0, 5))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 5, x_label = "I[0]", D_i, D_j)
 ```
@@ -488,23 +610,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.caption = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_nb, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df, c(0, 5))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 3, x_label = "I[0]", D_i, D_j)
 ```
@@ -535,23 +679,46 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+
+```{r, fig.caption = caption}
 incidence_df <- extract_incidence(posterior_sample, 30)
 plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df, c(0, 4))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 3, x_label = "I[0]", D_i, D_j)
 ```
@@ -582,23 +749,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.caption = caption}
 incidence_df <- extract_incidence(posterior_sample, 30)
 plot_incidence_prediction(incidence_df, y_df_nb, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df, c(0, 5))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 3, x_label = "I[0]", D_i, D_j)
 ```
@@ -616,7 +805,7 @@ map_df(ll_list, calculate_coverage, actual_values, inv_gamma_val) |>
 ```
 
 ```{r}
-table_coverage(coverage_df)
+table_coverage(coverage_df, "Table 3. Scenario 2's coverage table. Overdispersion")
 ```
 
 # Scenario 3
@@ -667,6 +856,12 @@ save_synthetic_data(syn_data_file, y_df_nb)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Scenario 3's simulated incidence reports. Measurement noise from the Poisson (no overdispersion) & Negative Binomial distributions was added to the smooth trajectories obtained from SEIR instances with an exponential-distributed latent period.")
+```
+
+```{r, fig.cap = caption}
 y_df <- bind_rows(y_df_nb, y_df_pois) |> 
   mutate(highlight = ifelse(dataset == 10, TRUE, FALSE))
 plot_y_by_overdispersion(y_df)
@@ -710,23 +905,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_pois, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 1))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 5, x_label = "I[0]", D_i, D_j)
 ```
@@ -759,23 +976,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_pois, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 1))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 5, x_label = "I[0]", D_i, D_j)
 ```
@@ -808,23 +1047,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.caption = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_pois, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 1))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 5, x_label = "I[0]", D_i, D_j)
 ```
@@ -857,23 +1118,46 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+
+```{r, fig.caption = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_pois, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 1))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 5, x_label = "I[0]", D_i, D_j)
 ```
@@ -891,7 +1175,7 @@ map_df(ll_list, calculate_coverage, actual_values, inv_gamma_val) |>
 ```
 
 ```{r}
-table_coverage(coverage_df)
+table_coverage(coverage_df, "Table 4. Scenario 3's coverage table. Poisson noise")
 ```
 
 ### Overdispersed data
@@ -929,23 +1213,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.caption = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_nb, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 4))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 3, x_label = "I[0]", D_i, D_j)
 ```
@@ -978,23 +1284,46 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_nb, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 5))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 3, x_label = "I[0]", D_i, D_j)
 ```
@@ -1027,23 +1356,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.caption = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_nb, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 4))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 3, x_label = "I[0]", D_i, D_j)
 ```
@@ -1076,23 +1427,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_nb, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 4))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 2, 3, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 3, x_label = "I[0]", D_i, D_j)
 ```
@@ -1110,7 +1483,7 @@ map_df(ll_list, calculate_coverage, actual_values, inv_gamma_val) |>
 ```
 
 ```{r}
-table_coverage(coverage_df)
+table_coverage(coverage_df, "Table 5. Scenario 3's coverage table. Overdispersion")
 ```
 
 # Scenario 4
@@ -1162,6 +1535,13 @@ save_synthetic_data(syn_data_file, y_df_nb)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Scenario 4's simulated incidence reports. Measurement noise from the Poisson (no overdispersion) & Negative Binomial distributions was added to the smooth trajectories obtained from SEIR instances with an exponential-distributed latent period.")
+```
+
+
+```{r, fig.cap = caption}
 y_df <- bind_rows(y_df_nb, y_df_pois) |> 
   mutate(highlight = ifelse(dataset == 10, TRUE, FALSE))
 plot_y_by_overdispersion(y_df)
@@ -1205,23 +1585,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_pois, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois)
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 7, 15, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 5, x_label = "I[0]", D_i, D_j)
 ```
@@ -1254,23 +1656,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_pois, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 0.25))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 7, 15, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 5, x_label = "I[0]", D_i, D_j)
 ```
@@ -1303,11 +1727,23 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_pois, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois)
 ```
 
@@ -1315,12 +1751,22 @@ plot_hist_mase(posterior_sample, y_df_pois)
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 7, 15, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 5, x_label = "I[0]", D_i, D_j)
 ```
@@ -1353,23 +1799,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df_pois, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 0.5))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 7, 15, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 5, x_label = "I[0]", D_i, D_j)
 ```
@@ -1387,7 +1855,7 @@ map_df(ll_list, calculate_coverage, actual_values, inv_gamma_val) |>
 ```
 
 ```{r S4_pois_cov}
-table_coverage(coverage_df)
+table_coverage(coverage_df, "Table 6. Scenario 4's coverage table. Poisson noise")
 ```
 
 
@@ -1428,23 +1896,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 #### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 40)
 plot_incidence_prediction(incidence_df, y_df_nb, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 1.5))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 5, 20, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 10, x_label = "I[0]", D_i, D_j)
 ```
@@ -1477,23 +1967,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 30)
 plot_incidence_prediction(incidence_df, y_df_nb, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 1.5))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 0, 15, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 8, x_label = "I[0]", D_i, D_j)
 ```
@@ -1526,23 +2038,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 30)
 plot_incidence_prediction(incidence_df, y_df_nb, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 1.5))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 5, 15, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 8, x_label = "I[0]", D_i, D_j)
 ```
@@ -1575,23 +2109,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidece fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 30)
 plot_incidence_prediction(incidence_df, y_df_nb, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 1.5))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 5, 15, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 4, x_label = "I[0]", D_i, D_j)
 ```
@@ -1609,7 +2165,7 @@ map_df(ll_list, calculate_coverage, actual_values, inv_gamma_val) |>
 ```
 
 ```{r}
-table_coverage(coverage_df)
+table_coverage(coverage_df, "Table 7. Scenario 4's coverage table. Overdispersion")
 ```
 
 # Scenario 5
@@ -1660,6 +2216,12 @@ save_synthetic_data(syn_data_file, y_df_nb)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Scenario 5's simulated incidence reports. Measurement noise from the Poisson (no overdispersion) & Negative Binomial distributions was added to the smooth trajectories obtained from SEIR instances with an exponential-distributed latent period.")
+```
+
+```{r, fig.cap = caption}
 y_df <- bind_rows(y_df_nb, y_df_pois) |> 
   mutate(highlight = ifelse(dataset == 10, TRUE, FALSE))
 plot_y_by_overdispersion(y_df)
@@ -1702,23 +2264,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 30)
 plot_incidence_prediction(incidence_df, y_df_pois, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 0.25))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 15, 25, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 4, x_label = "I[0]", D_i, D_j)
 ```
@@ -1751,23 +2335,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.caption = caption}
 incidence_df <- extract_incidence(posterior_sample, 40)
 plot_incidence_prediction(incidence_df, y_df_pois, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 0.20))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 10, 25, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 4, x_label = "I[0]", D_i, D_j)
 ```
@@ -1800,23 +2406,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 30)
 plot_incidence_prediction(incidence_df, y_df_pois, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0, 0.4))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 10, 25, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 4, x_label = "I[0]", D_i, D_j)
 ```
@@ -1849,23 +2477,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 30)
 plot_incidence_prediction(incidence_df, y_df_pois, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_pois, c(0.8, 1.1))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 10, 25, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 4, x_label = "I[0]", D_i, D_j)
 ```
@@ -1884,7 +2534,7 @@ map_df(ll_list, calculate_coverage, actual_values, inv_gamma_val) |>
 ```
 
 ```{r}
-table_coverage(coverage_df)
+table_coverage(coverage_df, "Table 8. Scenario 5's coverage table. Poisson")
 ```
 
 ### Overdispersed data
@@ -1923,23 +2573,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 30)
 plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_nb, c(0, 1))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 5, 35, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 15, x_label = "I[0]", D_i, D_j)
 ```
@@ -1972,23 +2644,45 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 30)
 plot_incidence_prediction(incidence_df, y_df_nb, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_nb, c(0, 1))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 10, 35, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 8, x_label = "I[0]", D_i, D_j)
 ```
@@ -2021,23 +2715,46 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 30)
 plot_incidence_prediction(incidence_df, y_df_nb, D_i, D_j, ds)
 ```
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_nb, c(0, 2))
 ```
 
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 10, 35, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 8, x_label = "I[0]", D_i, D_j)
 ```
@@ -2070,12 +2787,23 @@ posterior_subset <- ll_list[[D_j]][ds_subset]
 ##### Incidence fit
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Posterior predictive checks against latent incidence. Dots denote synthetic data while lines indicate simulations from candidates' ODE structure. We configure these structures using samples from the posterior distribution.")
+```
+
+```{r, fig.cap = caption}
 incidence_df <- extract_incidence(posterior_sample, 20)
 plot_incidence_prediction(incidence_df, y_df, D_i, D_j, ds)
 ```
 
-
 ```{r}
+fig_cntr <- fig_cntr + 1
+
+caption  <- str_glue("Fig {fig_cntr}. Fit scores by candidate model and type of data. $x$ denotes latent incidence, whereas $y$ indicates observed incidence. Vertical line denotes the mean.")
+```
+
+```{r, fig.cap = caption}
 plot_hist_mase(posterior_sample, y_df_nb, c(0, 1.5))
 ```
 
@@ -2083,12 +2811,22 @@ plot_hist_mase(posterior_sample, y_df_nb, c(0, 1.5))
 ##### $\Re_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the basic reproduction number by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_R0_comparison_by_dataset(posterior_subset, R0_val, 5, 35, D_i, D_j)
 ```
 
 ##### $I_0$ marginal distribution
 
 ```{r}
+fig_cntr <- fig_cntr + 1
+caption  <- str_glue("Fig {fig_cntr}. Estimates of the initial number of infectious individuals by dataset and model candidate. Error bars denote 95\\% credible intervals. The value in the middle of the bars indicates the distance between the marginal posterior's mean and the true value (vertical line).")
+```
+
+```{r, fig.cap = caption}
 plot_par_estimates_by_dataset(posterior_subset, "I0", 1, x_min = 0,
                               x_max = 12, x_label = "I[0]", D_i, D_j)
 ```
@@ -2106,5 +2844,5 @@ map_df(ll_list, calculate_coverage, actual_values, inv_gamma_val) |>
 ```
 
 ```{r}
-table_coverage(coverage_df)
+table_coverage(coverage_df, "Table 9. Scenario 5's coverage table. Overdispersion")
 ```

@@ -1,6 +1,6 @@
 library(gt)
 
-table_coverage <- function(df) {
+table_coverage <- function(df, caption = "") {
   
   df <- relocate(df, R0, .after = M_ij)
   
@@ -49,7 +49,9 @@ table_coverage <- function(df) {
     gt_table <- gt_table |> cols_label(inv_phi = html("&phi;<sup>-1</sup>"))
   }
   
-  gt_table
+  gt_table |> 
+    tab_caption(caption)
+    
 }
 
 table_scenarios <- function(df) {
@@ -57,7 +59,8 @@ table_scenarios <- function(df) {
   df |> 
     gt()  |> 
     cols_label(R0      = html("\u211c<sub>0</sub>",),
-               tau = html("&tau;<sub>e</sub>"))
+               tau = html("&tau;<sub>e</sub>")) |> 
+    tab_caption(html("<font size='1.5'>Table 1. Scenarios for sensitivity analysis</font>"))
   
 }
 
@@ -71,7 +74,8 @@ table_parameters <- function(df) {
         cell_borders(sides = "bottom", weight = px(3)),
         #Make text bold
         cell_text(weight = "bold")
-      ))
+      )) |> 
+    tab_caption("Table 1. Constants")
 }
 
 table_inits <- function(df) {
@@ -85,5 +89,6 @@ table_inits <- function(df) {
         #Make text bold
         cell_text(weight = "bold")
       )) |> 
-    cols_label(init = "Init value")
+    cols_label(init = "Init value") |> 
+    tab_caption("Table 2. Inits")
 }
