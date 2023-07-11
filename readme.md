@@ -26,7 +26,7 @@ an indicator of the transmission potential of an emerging infectious
 disease and the effort required to control the invading pathogen.
 However, its estimates from compartmental models are strongly
 conditioned by assumptions in the model structure, such as the
-distribution of the latent and infectious periods (epidemiological
+distributions of the latent and infectious periods (epidemiological
 delays). To further complicate matters, models with dissimilar delay
 structures produce equivalent incidence dynamics. Following a simulation
 study, we reveal that the nature of such equivalency stems from a linear
@@ -39,8 +39,7 @@ other quantities deemed of lesser importance. We further explore this
 approach’s robustness by testing various transmissibility levels,
 generation times, and data fidelity (overdispersion). Finally, we apply
 the proposed approach to data from the 1918 influenza pandemic. We
-anticipate that this work will mitigate potentially large errors in the
-estimation of $\Re_0$..
+anticipate that this work will mitigate biases in estimating $\Re_0$.
 
 ## Resources
 
