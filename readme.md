@@ -1,6 +1,8 @@
 
 # Andrade & Duggan (2023)
 
+[![DOI](https://zenodo.org/badge/478744563.svg)](https://zenodo.org/badge/latestdoi/478744563)
+
 This repository contains code for the paper:
 
 [Jair Andrade](https://www.linkedin.com/in/jandraor/) and [Jim
