@@ -3,12 +3,14 @@
 
 [![DOI](https://zenodo.org/badge/478744563.svg)](https://zenodo.org/badge/latestdoi/478744563)
 
-This repository contains code for the paper:
+This repository contains code for the
+[paper](https://doi.org/10.1098/rsos.230515):
 
 [Jair Andrade](https://www.linkedin.com/in/jandraor/) and [Jim
 Duggan](https://ie.linkedin.com/in/jduggan). *Anchoring the mean
 generation time in the SEIR to mitigate biases in* $\Re_0$ *estimates
 due to uncertainty in the distribution of the epidemiological delays*.
+**Royal Society Open Science**, 10(8), 230515.
 
 The analysis in this study can be reproduced by executing the files:
 

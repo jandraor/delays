@@ -6,10 +6,10 @@ output: github_document
 
 [![DOI](https://zenodo.org/badge/478744563.svg)](https://zenodo.org/badge/latestdoi/478744563)
 
-This repository contains code for the paper:
+This repository contains code for the [paper](https://doi.org/10.1098/rsos.230515):
 
 [Jair Andrade](https://www.linkedin.com/in/jandraor/) and 
-[Jim Duggan](https://ie.linkedin.com/in/jduggan). _Anchoring the mean generation time in the SEIR to mitigate biases in_ $\Re_0$ _estimates due to uncertainty in the distribution of the epidemiological delays_.
+[Jim Duggan](https://ie.linkedin.com/in/jduggan). _Anchoring the mean generation time in the SEIR to mitigate biases in_ $\Re_0$ _estimates due to uncertainty in the distribution of the epidemiological delays_. **Royal Society Open Science**, 10(8), 230515.
 
 The analysis in this study can be reproduced by executing the files:
 
@@ -31,6 +31,3 @@ The basic reproduction number, $\Re_0$, is of paramount importance in the study 
 * [Stan](https://mc-stan.org/)
 
 * [readsdr](https://github.com/jandraor/readsdr)
-
-
-
