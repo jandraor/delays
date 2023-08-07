@@ -50,3 +50,9 @@ anticipate that this work will mitigate biases in estimating $\Re_0$.
 - [Stan](https://mc-stan.org/)
 
 - [readsdr](https://github.com/jandraor/readsdr)
+
+## Corrigendum
+
+Equation 3.2 in the paper should be:
+
+$\beta = \frac{j + 1}{\Re_0^{-1} 2 j (\tau - \sigma^{-1})}$

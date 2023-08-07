@@ -31,3 +31,10 @@ The basic reproduction number, $\Re_0$, is of paramount importance in the study 
 * [Stan](https://mc-stan.org/)
 
 * [readsdr](https://github.com/jandraor/readsdr)
+
+## Corrigendum
+
+Equation 3.2 in the paper should be:
+
+$\beta = \frac{j + 1}{\Re_0^{-1} 2 j (\tau - \sigma^{-1})}$
+
