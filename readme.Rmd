@@ -38,3 +38,13 @@ Equation 3.2 in the paper should be:
 
 $\beta = \frac{j + 1}{\Re_0^{-1} 2 j (\tau - \sigma^{-1})}$
 
+## Reprex
+
+See Section 4.2 in this 
+[tutorial](https://jandraor.github.io/tutorials/Inference.html#42_Fixing_the_mean_generation_time) 
+to reproduce in a simple manner the calibration of the alternative 
+parameterisation to the Cumberland data.
+
+
+
+
